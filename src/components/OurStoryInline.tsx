@@ -18,6 +18,13 @@ const founders = [
   },
 ];
 
+const advisor = {
+  name: "Fehintoluwa Dada",
+  role: "Advisor, Product Strategy & Digital Transformation",
+  bio: "Fehintoluwa Dada is a UK based IT Business Analyst and Digital Product Strategist who helps teams turn complex ideas into clear, usable digital products. She supports AutoDrive with product structure, user experience, research, and process thinking, bringing a practical outside lens to how the platform can scale for real Nigerian drivers, agents, and partners.",
+  photo: "/images/advisor-fehintoluwa.jpeg",
+};
+
 export default function OurStoryInline() {
   return (
     <section id="our-story" className="section-padding bg-off-white">
@@ -92,18 +99,35 @@ export default function OurStoryInline() {
           ))}
         </div>
 
-        {/* Supporting team */}
+        {/* Advisor */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.5 }}
-          className="bg-navy rounded-3xl p-8 text-center"
+          className="bg-navy rounded-3xl overflow-hidden shadow-sm"
         >
-          <p className="text-white/70 text-lg">
-            Supported by{" "}
-            <span className="text-white font-semibold">Mrs. Fehintoluwa</span>, Advisor, Government Relations
-          </p>
+          <div className="grid md:grid-cols-[320px_1fr]">
+            <div className="relative h-[360px] md:h-full min-h-[360px]">
+              <Image
+                src={advisor.photo}
+                alt={advisor.name}
+                fill
+                className="object-cover object-top"
+                sizes="(max-width: 768px) 100vw, 320px"
+              />
+            </div>
+            <div className="p-8 md:p-10 flex flex-col justify-center">
+              <p className="text-gold font-semibold tracking-widest uppercase text-sm mb-3">
+                Strategic Advisor
+              </p>
+              <h3 className="font-lora text-3xl font-bold text-white mb-2">
+                {advisor.name}
+              </h3>
+              <p className="text-gold font-semibold mb-5">{advisor.role}</p>
+              <p className="text-white/70 leading-relaxed">{advisor.bio}</p>
+            </div>
+          </div>
         </motion.div>
       </div>
     </section>
