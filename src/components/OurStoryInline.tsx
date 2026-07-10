@@ -20,7 +20,7 @@ const founders = [
 
 const advisor = {
   name: "Fehintoluwa Dada",
-  role: "Advisor, Product Strategy & Digital Transformation",
+  role: "Technical Partner, Product Strategy & Digital Transformation",
   bio: "Fehintoluwa Dada is a UK based IT Business Analyst and Digital Product Strategist who helps teams turn complex ideas into clear, usable digital products. She supports AutoDrive with product structure, user experience, research, and process thinking, bringing a practical outside lens to how the platform can scale for real Nigerian drivers, agents, and partners.",
   photo: "/images/advisor-fehintoluwa.jpeg",
 };
@@ -99,7 +99,7 @@ export default function OurStoryInline() {
           ))}
         </div>
 
-        {/* Advisor */}
+        {/* Technical partner */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
@@ -119,7 +119,7 @@ export default function OurStoryInline() {
             </div>
             <div className="p-8 md:p-10 flex flex-col justify-center">
               <p className="text-gold font-semibold tracking-widest uppercase text-sm mb-3">
-                Strategic Advisor
+                Technical Partner
               </p>
               <h3 className="font-lora text-3xl font-bold text-white mb-2">
                 {advisor.name}
