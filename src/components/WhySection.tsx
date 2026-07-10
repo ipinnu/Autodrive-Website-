@@ -8,7 +8,7 @@ const cards = [
     icon: Zap,
     number: "01",
     title: "Built for the Essentials",
-    body: "Every driver must renew documents, maintain their car, and stay road-legal. AutoDrive makes this effortless by helping you avoid fines and skip costly surprises.",
+    body: "Every driver must renew documents, maintain their car, and stay road legal. AutoDrive makes this effortless by helping you avoid fines and skip costly surprises.",
   },
   {
     icon: Layers,
@@ -20,7 +20,7 @@ const cards = [
     icon: Users,
     number: "03",
     title: "Rooted in Local Trust",
-    body: "AutoDrive works with Nigeria's existing licensed agents — the same people your estate, church, and workplace already use. We give them better tools, so you get a reliable service.",
+    body: "AutoDrive works with Nigeria's existing licensed agents, the same people your estate, church, and workplace already use. We give them better tools, so you get a reliable service.",
   },
 ];
 

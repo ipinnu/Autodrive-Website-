@@ -22,7 +22,7 @@ const faqs = [
     a: "The beta is free to download and join. You only pay for the actual cost of your document renewals plus a standard service and delivery fee. We do not have any hidden charges.",
   },
   {
-    q: "I'm not very tech-savvy — can I still use it?",
+    q: "I'm not very tech savvy. Can I still use it?",
     a: "AutoDrive is designed to be straightforward and we ensure that the app is easy to navigate. It has been tested across all age groups to ensure it remains intuitive.",
   },
   {

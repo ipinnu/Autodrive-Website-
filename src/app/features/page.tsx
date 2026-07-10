@@ -4,9 +4,9 @@ import FeaturesSection from "@/components/FeaturesSection";
 import CTASection from "@/components/CTASection";
 
 export const metadata: Metadata = {
-  title: "Features — AutoDrive Nigeria",
+  title: "Features | AutoDrive Nigeria",
   description:
-    "How AutoDrive works and everything it can do for you — document renewals, smart reminders, fine payments, and doorstep delivery.",
+    "How AutoDrive works and everything it can do for you, including document renewals, smart reminders, fine payments, and doorstep delivery.",
 };
 
 export default function FeaturesPage() {
@@ -22,7 +22,7 @@ export default function FeaturesPage() {
             <span className="text-gold">Can Do For You</span>
           </h1>
           <p className="text-white/70 text-xl leading-relaxed">
-            Four steps to get started, and six features to keep you road-legal.
+            Four steps to get started, and six features to keep you road legal.
           </p>
         </div>
       </section>

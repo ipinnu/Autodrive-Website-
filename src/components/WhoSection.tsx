@@ -1,22 +1,23 @@
 "use client";
 
 import { motion } from "framer-motion";
+import { Users, Building2, Briefcase } from "lucide-react";
 
 const personas = [
   {
-    emoji: "👨‍👩‍👧",
+    icon: Users,
     title: "The Family Driver",
     subtitle: "For every parent managing the house car",
     body: "Manage cars for the whole house. AutoDrive reminds you before the car becomes a problem on the road. No more asking, \"Honey, did you remember to renew the vehicle license?\"",
   },
   {
-    emoji: "⛪",
+    icon: Building2,
     title: "Communities & Groups",
     subtitle: "Churches, estates, and workplaces",
     body: "We partner with trusted organizations for on-site renewals and referral rewards. Whether it is your church, estate, or workplace, we bring the service directly to your community.",
   },
   {
-    emoji: "🚗",
+    icon: Briefcase,
     title: "Fleet & Business Owners",
     subtitle: "Manage every vehicle in one place",
     body: "Uber drivers, logistics companies, and corporate fleets can manage every vehicle from one central dashboard. Scale your operations without the administrative stress.",
@@ -51,7 +52,7 @@ export default function WhoSection() {
               transition={{ duration: 0.5, delay: i * 0.1 }}
               className="bg-white/5 border border-white/10 rounded-3xl p-7 hover:bg-white/10 transition-all duration-300 hover:-translate-y-1"
             >
-              <div className="text-5xl mb-5">{persona.emoji}</div>
+              <div className="mb-5"><persona.icon className="w-12 h-12 text-gold" /></div>
               <h3 className="font-lora font-bold text-xl text-white mb-1">
                 {persona.title}
               </h3>

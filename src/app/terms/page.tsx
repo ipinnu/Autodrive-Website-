@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Terms of Service — AutoDrive Nigeria",
+  title: "Terms of Service | AutoDrive Nigeria",
   description: "Terms and conditions governing your use of AutoDrive Automobile Services Ltd's platform and services.",
 };
 
@@ -38,7 +38,7 @@ const sections = [
     content: [
       {
         subtitle: "Vehicle Document Renewals",
-        text: "AutoDrive facilitates the renewal of vehicle-related documents, including but not limited to vehicle license, roadworthiness certificates, and driver's licenses, on behalf of registered users.",
+        text: "AutoDrive facilitates the renewal of vehicle related documents, including but not limited to vehicle license, roadworthiness certificates, and driver's licenses, on behalf of registered users.",
       },
       {
         subtitle: "Reminders and Notifications",
@@ -46,7 +46,7 @@ const sections = [
       },
       {
         subtitle: "Doorstep Delivery",
-        text: "Processed documents may be delivered to a user-specified address within supported regions, subject to availability and applicable delivery fees.",
+        text: "Processed documents may be delivered to a user specified address within supported regions, subject to availability and applicable delivery fees.",
       },
       {
         subtitle: "Digital Document Storage",
@@ -73,11 +73,11 @@ const sections = [
     ],
   },
   {
-    title: "7. Third-Party Services",
+    title: "7. Third Party Services",
     content: [
       {
         subtitle: "",
-        text: "AutoDrive integrates with third-party services, including payment processors and government agencies, to deliver its services. We do not control and are not responsible for the actions, privacy practices, or availability of these third parties. Use of third-party services through our Platform is subject to their respective terms and privacy policies.",
+        text: "AutoDrive integrates with third party services, including payment processors and government agencies, to deliver its services. We do not control and are not responsible for the actions, privacy practices, or availability of these third parties. Use of third party services through our Platform is subject to their respective terms and privacy policies.",
       },
     ],
   },
@@ -95,7 +95,7 @@ const sections = [
     content: [
       {
         subtitle: "",
-        text: "Refund eligibility depends on the stage of document processing. Refunds will not be issued once documents have been submitted to the relevant government agencies on your behalf. For cancellations made before processing begins, a full refund will be issued within 5–10 business days. Delivery fees are non-refundable once dispatch has occurred. For disputes, contact us at autodrive.ng@gmail.com.",
+        text: "Refund eligibility depends on the stage of document processing. Refunds will not be issued once documents have been submitted to the relevant government agencies on your behalf. For cancellations made before processing begins, a full refund will be issued within 5 to 10 business days. Delivery fees are non refundable once dispatch has occurred. For disputes, contact us at autodrive.ng@gmail.com.",
       },
     ],
   },
@@ -113,7 +113,7 @@ const sections = [
     content: [
       {
         subtitle: "",
-        text: "To the fullest extent permitted by applicable law, AutoDrive shall not be liable for: (a) any indirect, incidental, special, consequential, or punitive damages; (b) loss of data, revenue, profits, or goodwill; (c) delays caused by government agencies, third-party partners, or circumstances beyond our control; or (d) inaccuracies in renewal information resulting from user error. Our total liability to you for any claim arising out of or relating to these Terms or our services shall not exceed the amount you paid to us in the 30 days preceding the event giving rise to the claim.",
+        text: "To the fullest extent permitted by applicable law, AutoDrive shall not be liable for: (a) any indirect, incidental, special, consequential, or punitive damages; (b) loss of data, revenue, profits, or goodwill; (c) delays caused by government agencies, third party partners, or circumstances beyond our control; or (d) inaccuracies in renewal information resulting from user error. Our total liability to you for any claim arising out of or relating to these Terms or our services shall not exceed the amount you paid to us in the 30 days preceding the event giving rise to the claim.",
       },
     ],
   },
@@ -122,7 +122,7 @@ const sections = [
     content: [
       {
         subtitle: "",
-        text: "You agree to indemnify, defend, and hold harmless AutoDrive Automobile Services Ltd, its officers, directors, employees, and agents from and against any claims, damages, losses, liabilities, costs, and expenses (including legal fees) arising out of or related to your use of the Platform, your violation of these Terms, or your infringement of any third-party rights.",
+        text: "You agree to indemnify, defend, and hold harmless AutoDrive Automobile Services Ltd, its officers, directors, employees, and agents from and against any claims, damages, losses, liabilities, costs, and expenses (including legal fees) arising out of or related to your use of the Platform, your violation of these Terms, or your infringement of any third party rights.",
       },
     ],
   },
@@ -161,7 +161,7 @@ const sections = [
     content: [
       {
         subtitle: "",
-        text: "We reserve the right to modify these Terms at any time. When we do, we will revise the 'Last Updated' date below. If changes are material, we will notify you via email or an in-app notification. Continued use of the Platform after the effective date of any changes constitutes your acceptance of the revised Terms.",
+        text: "We reserve the right to modify these Terms at any time. When we do, we will revise the 'Last Updated' date below. If changes are material, we will notify you via email or an in app notification. Continued use of the Platform after the effective date of any changes constitutes your acceptance of the revised Terms.",
       },
     ],
   },
@@ -170,7 +170,7 @@ const sections = [
     content: [
       {
         subtitle: "",
-        text: "If you have questions about these Terms, please contact us at autodrive.ng@gmail.com or call +234 813 375 4181. Customer Support Hours: Monday to Friday, 9:00 AM – 5:00 PM (WAT).",
+        text: "If you have questions about these Terms, please contact us at autodrive.ng@gmail.com or call +234 813 375 4181. Customer Support Hours: Monday to Friday, 9:00 AM to 5:00 PM (WAT).",
       },
     ],
   },

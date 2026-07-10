@@ -7,7 +7,7 @@ const BETA_URL = "https://forms.gle/G3Z2agiFyVE1cEWj8";
 
 const trustBadges = [
   { icon: Lock, label: "Secure" },
-  { icon: Shield, label: "Nigerian-Built" },
+  { icon: Shield, label: "Nigerian Built" },
   { icon: Smartphone, label: "Beta Live" },
 ];
 
@@ -28,7 +28,7 @@ export default function CTASection() {
           {/* Badge */}
           <div className="inline-flex items-center gap-2 bg-gold/20 text-gold text-sm font-semibold px-4 py-2 rounded-full mb-8 border border-gold/30">
             <span className="w-2 h-2 bg-gold rounded-full animate-pulse" />
-            Beta Now Live — Limited Spots
+            Beta Now Live, Limited Spots
           </div>
 
           <h2 className="font-lora text-4xl md:text-5xl lg:text-6xl font-bold text-white mb-6 leading-tight">

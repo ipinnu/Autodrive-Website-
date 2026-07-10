@@ -15,7 +15,7 @@ const footerLinks = {
   ],
   Download: [
     { label: "Android Beta (Google Play)", href: BETA_URL, external: true },
-    { label: "iOS — Coming Soon", href: "#", disabled: true },
+    { label: "iOS Coming Soon", href: "#", disabled: true },
   ],
   Legal: [
     { label: "Privacy Policy", href: "/privacy-policy" },
@@ -134,10 +134,10 @@ export default function Footer() {
       <div className="py-6 px-4 md:px-8">
         <div className="container-wide flex flex-col md:flex-row items-center justify-between gap-3">
           <p className="text-white/50 text-sm text-center md:text-left">
-            © 2025 AutoDrive Automobile Services Ltd. All rights reserved.
+            Copyright 2025 AutoDrive Automobile Services Ltd. All rights reserved.
           </p>
           <p className="text-white/50 text-sm">
-            Built in Nigeria 🇳🇬 for every Nigerian driver.
+            Built in Nigeria for every Nigerian driver.
           </p>
         </div>
       </div>

@@ -4,7 +4,7 @@ import OurStoryInline from "@/components/OurStoryInline";
 import CTASection from "@/components/CTASection";
 
 export const metadata: Metadata = {
-  title: "Why AutoDrive — AutoDrive Nigeria",
+  title: "Why AutoDrive | AutoDrive Nigeria",
   description:
     "Why AutoDrive is different, who it's built for, and the story behind Nigeria's first centralized car document management platform.",
 };
@@ -18,7 +18,7 @@ export default function WhyAutoDrivePage() {
             The Full Picture
           </p>
           <h1 className="font-lora text-4xl md:text-6xl font-bold leading-tight mb-6">
-            Why AutoDrive —{" "}
+            Why AutoDrive{" "}
             <span className="text-gold">And Why It Matters</span>
           </h1>
           <p className="text-white/70 text-xl leading-relaxed">

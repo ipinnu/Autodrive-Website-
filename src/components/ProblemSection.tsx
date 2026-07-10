@@ -6,19 +6,16 @@ import { AlertTriangle, Clock, FileX, ArrowDown } from "lucide-react";
 const problems = [
   {
     icon: AlertTriangle,
-    emoji: "😰",
     title: "Avoid the LASTMA headache",
     body: "Most drivers only realize their papers have expired when they are pulled over. It isn't your fault, the system is designed to be forgotten until it's too late.",
   },
   {
     icon: Clock,
-    emoji: "⏳",
     title: "Save your working hours",
     body: "Renewing documents shouldn't require taking a day off to stand in the sun. Stop wasting your transport fare and energy on government office queues.",
   },
   {
     icon: FileX,
-    emoji: "🔍",
     title: "End the paper chase",
     body: "Tracking your license, insurance, and roadworthiness certificates is a constant struggle. Stop digging through your glove box or home files to find what you need.",
   },
@@ -53,7 +50,7 @@ export default function ProblemSection() {
               transition={{ duration: 0.5, delay: i * 0.15 }}
               className="bg-red-50 border border-red-100 rounded-3xl p-7 hover:shadow-lg transition-shadow"
             >
-              <div className="text-4xl mb-4">{problem.emoji}</div>
+              <div className="mb-4"><problem.icon className="w-10 h-10 text-gold" /></div>
               <h3 className="font-lora font-bold text-lg text-navy mb-3 leading-snug">
                 {problem.title}
               </h3>

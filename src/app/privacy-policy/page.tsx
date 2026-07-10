@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Privacy Policy — AutoDrive Nigeria",
+  title: "Privacy Policy | AutoDrive Nigeria",
   description: "How AutoDrive Automobile Services Ltd collects, uses, and protects your personal information.",
 };
 
@@ -15,7 +15,7 @@ const sections = [
       },
       {
         subtitle: "Payment Information",
-        text: "We collect payment details (such as credit card information) to process transactions. These details are processed securely by our third-party payment processors.",
+        text: "We collect payment details (such as credit card information) to process transactions. These details are processed securely by our third party payment processors.",
       },
       {
         subtitle: "Documents and Images",
@@ -23,7 +23,7 @@ const sections = [
       },
       {
         subtitle: "Location Data",
-        text: "We may collect location data through the mobile application to provide location-based services (e.g., for delivery or to identify the nearest service center).",
+        text: "We may collect location data through the mobile application to provide location based services (e.g., for delivery or to identify the nearest service center).",
       },
       {
         subtitle: "Cookies and Tracking Technologies",
@@ -35,9 +35,9 @@ const sections = [
     title: "2. How We Use Your Information",
     content: [
       { subtitle: "Service Provision", text: "To process document renewals, manage your account, and fulfill orders for physical and digital vehicle documents and driver's licenses." },
-      { subtitle: "Communication", text: "To send you account-related notifications, service updates, reminders about document renewals, and customer support communications." },
-      { subtitle: "Third-Party Sharing", text: "We may share your data with third-party service providers to process payments, fulfill document renewals, and for other operational purposes. These third parties are contractually obligated to protect your data and use it solely for the services we provide." },
-      { subtitle: "Marketing and Promotional Purposes", text: "With your consent, we may use your contact information to send you promotional emails or push notifications regarding new services, discounts, or updates. You can opt-out of marketing communications at any time." },
+      { subtitle: "Communication", text: "To send you account related notifications, service updates, reminders about document renewals, and customer support communications." },
+      { subtitle: "Third Party Sharing", text: "We may share your data with third party service providers to process payments, fulfill document renewals, and for other operational purposes. These third parties are contractually obligated to protect your data and use it solely for the services we provide." },
+      { subtitle: "Marketing and Promotional Purposes", text: "With your consent, we may use your contact information to send you promotional emails or push notifications regarding new services, discounts, or updates. You can opt out of marketing communications at any time." },
     ],
   },
   {
@@ -53,14 +53,14 @@ const sections = [
     content: [
       { subtitle: "Accessing and Updating Your Data", text: "You can access, update, or modify your personal data by logging into your account or contacting us at any time." },
       { subtitle: "Deleting Your Data", text: "You can request that we delete your personal data, provided that the deletion does not conflict with any legal obligations or business requirements we have to retain it." },
-      { subtitle: "Opt-Out Options", text: "If you no longer wish to receive marketing emails or other promotional communications, you can opt out by clicking the unsubscribe link in the email or through the in-app settings." },
+      { subtitle: "Opt Out Options", text: "If you no longer wish to receive marketing emails or other promotional communications, you can opt out by clicking the unsubscribe link in the email or through the in app settings." },
       { subtitle: "Managing Cookies", text: "You can manage your cookie preferences through the settings of your browser, depending on the platform you are using." },
     ],
   },
   {
     title: "5. Sharing of Information with Third Parties",
     content: [
-      { subtitle: "Service Providers", text: "We work with third-party partners to process payments, fulfill orders, and provide customer support services. These partners are required to handle your data securely and only for the purpose of fulfilling their role in our service delivery." },
+      { subtitle: "Service Providers", text: "We work with third party partners to process payments, fulfill orders, and provide customer support services. These partners are required to handle your data securely and only for the purpose of fulfilling their role in our service delivery." },
       { subtitle: "Legal and Regulatory Compliance", text: "We may share your information with authorities or other third parties if required to comply with a legal obligation, resolve disputes, or protect our rights." },
       { subtitle: "Business Transfers", text: "In the event of a merger, acquisition, or sale of assets, your personal information may be transferred to the new owner or operator of the business." },
     ],
@@ -82,7 +82,7 @@ const sections = [
   {
     title: "8. Contact Us",
     content: [
-      { subtitle: "", text: "If you have any questions or concerns about this Privacy Policy or our data practices, please contact us at autodrive.ng@gmail.com or call +234 813 375 4181. Customer Support Hours: Monday to Friday, 9:00 AM – 5:00 PM (WAT)." },
+      { subtitle: "", text: "If you have any questions or concerns about this Privacy Policy or our data practices, please contact us at autodrive.ng@gmail.com or call +234 813 375 4181. Customer Support Hours: Monday to Friday, 9:00 AM to 5:00 PM (WAT)." },
     ],
   },
 ];

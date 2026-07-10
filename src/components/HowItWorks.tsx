@@ -18,8 +18,6 @@ function IPhoneFrame({ src, alt, cropPosition = "top" }: { src: string; alt: str
             sizes="170px"
           />
 
-          {/* Home indicator */}
-          <div className="absolute bottom-2 left-1/2 -translate-x-1/2 w-20 h-[4px] bg-white/30 rounded-full z-30" />
         </div>
       </div>
     </div>
@@ -96,10 +94,6 @@ export default function HowItWorks() {
               transition={{ duration: 0.5, delay: i * 0.15 }}
               className="relative"
             >
-              {i < steps.length - 1 && (
-                <div className="hidden lg:block absolute top-[200px] left-[calc(100%_-_16px)] w-8 h-0.5 bg-gray-200 z-10" />
-              )}
-
               <div className={`bg-white rounded-3xl border-2 ${step.accent} hover:shadow-xl transition-all duration-300 h-full flex flex-col overflow-hidden`}>
                 <div className="pt-8 pb-4 px-4 bg-gray-50 flex justify-center">
                   <IPhoneFrame {...step.image} />

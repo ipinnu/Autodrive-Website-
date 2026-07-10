@@ -6,8 +6,8 @@ import { Car, Award, FileWarning, PackageCheck } from "lucide-react";
 const stats = [
   { value: "12M+", label: "Registered vehicles in Nigeria", icon: Car },
   { value: "2M+", label: "Annual document renewals in Lagos alone", icon: PackageCheck },
-  { value: "75%", label: "Of cars have expired papers — FRSC, NIA", icon: FileWarning },
-  { value: "1st", label: "Nationwide automated delivery-first solution", icon: Award },
+  { value: "75%", label: "Of cars have expired papers, FRSC and NIA", icon: FileWarning },
+  { value: "1st", label: "Nationwide automated delivery first solution", icon: Award },
 ];
 
 export default function IntroSection() {
@@ -29,7 +29,7 @@ export default function IntroSection() {
             AutoDrive is a Nigerian-built mobile app that puts your entire car
             life in one place. We remind you before anything expires. We renew
             your papers without you standing in a queue. We deliver your
-            documents to your door. Whether you own one car or manage a fleet —
+            documents to your door. Whether you own one car or manage a fleet,
             AutoDrive was made for you.
           </p>
         </motion.div>

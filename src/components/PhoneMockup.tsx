@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Bell, Package, CheckCircle2, Clock, Truck, Home, Car } from "lucide-react";
+import { Bell, Package, CheckCircle2, Clock, Truck, Home, Car, MapPin } from "lucide-react";
 
 const screens = [
   {
@@ -14,7 +14,7 @@ const screens = [
         <div className="bg-[#0F2A45] px-4 pt-6 pb-10 rounded-b-3xl">
           <p className="text-white/70 text-xs mb-1">Good morning,</p>
           <h3 className="text-white font-bold text-lg font-lora">Tope&apos;s Garage</h3>
-          <p className="text-white/60 text-xs mt-1">2 vehicles · 1 alert</p>
+          <p className="text-white/60 text-xs mt-1">2 vehicles, 1 alert</p>
         </div>
 
         {/* Car card */}
@@ -25,7 +25,7 @@ const screens = [
             </div>
             <div className="flex-1">
               <p className="font-bold text-navy text-sm">Tope&apos;s Baby</p>
-              <p className="text-gray-500 text-xs">Lexus RX 350 · GWA-125EY</p>
+              <p className="text-gray-500 text-xs">Lexus RX 350, GWA 125EY</p>
             </div>
             <span className="text-xs bg-gold/10 text-gold font-semibold px-2 py-1 rounded-full">1 Due</span>
           </div>
@@ -33,8 +33,8 @@ const screens = [
           <div className="mt-3 space-y-2">
             {[
               { name: "Vehicle Licence", status: "Expires in 23 days", color: "text-gold" },
-              { name: "Motor Insurance", status: "Valid · 8 months left", color: "text-gold" },
-              { name: "Roadworthiness", status: "Valid · 4 months left", color: "text-gold" },
+              { name: "Motor Insurance", status: "Valid, 8 months left", color: "text-gold" },
+              { name: "Roadworthiness", status: "Valid, 4 months left", color: "text-gold" },
             ].map((doc) => (
               <div key={doc.name} className="flex items-center justify-between">
                 <span className="text-xs text-gray-600">{doc.name}</span>
@@ -52,7 +52,7 @@ const screens = [
             </div>
             <div>
               <p className="font-bold text-navy text-sm">The Family Car</p>
-              <p className="text-gray-500 text-xs">Mercedes C350 · AGL-744KJ</p>
+              <p className="text-gray-500 text-xs">Mercedes C350, AGL 744KJ</p>
             </div>
           </div>
         </div>
@@ -133,8 +133,8 @@ const screens = [
         </div>
 
         <div className="mx-3 -mt-4 bg-white rounded-2xl shadow-lg p-5">
-          <p className="text-xs text-gray-500 mb-1">Vehicle Licence — Tope&apos;s Baby</p>
-          <p className="font-bold text-navy text-sm mb-4">GWA-125EY · Lexus RX 350</p>
+          <p className="text-xs text-gray-500 mb-1">Vehicle Licence for Tope&apos;s Baby</p>
+          <p className="font-bold text-navy text-sm mb-4">GWA 125EY, Lexus RX 350</p>
 
           {[
             { label: "Order Placed", done: true, active: false },
@@ -177,7 +177,7 @@ const screens = [
                   {step.label}
                 </p>
                 {step.active && (
-                  <p className="text-xs text-gray-400 mt-0.5">In progress · Est. 2hrs</p>
+                  <p className="text-xs text-gray-400 mt-0.5">In progress, Est. 2hrs</p>
                 )}
               </div>
             </div>
@@ -185,8 +185,9 @@ const screens = [
         </div>
 
         <div className="mx-3 mt-3 bg-gold/10 rounded-xl p-3">
-          <p className="text-xs text-gold font-medium text-center">
-            📍 Estimated delivery: Today, 4:00–6:00 PM
+          <p className="text-xs text-gold font-medium text-center flex items-center justify-center gap-1.5">
+            <MapPin className="w-3 h-3" />
+            Estimated delivery: Today, 4:00 to 6:00 PM
           </p>
         </div>
       </div>
@@ -230,8 +231,6 @@ export default function PhoneMockup() {
           </AnimatePresence>
         </div>
 
-        {/* Home bar */}
-        <div className="absolute bottom-2 left-1/2 -translate-x-1/2 w-24 h-1.5 bg-white/30 rounded-full" />
       </div>
 
       {/* Dots */}
@@ -241,7 +240,7 @@ export default function PhoneMockup() {
             key={i}
             onClick={() => setCurrent(i)}
             className={`w-2 h-2 rounded-full transition-all ${
-              i === current ? "bg-gold w-6" : "bg-gray-300"
+              i === current ? "bg-gold" : "bg-gray-300"
             }`}
           />
         ))}

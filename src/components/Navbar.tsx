@@ -38,9 +38,15 @@ export default function Navbar() {
       {/* Announcement ticker */}
       <div className="bg-navy text-white text-sm py-2 overflow-hidden">
         <div className="ticker-content inline-block px-4">
-          🟢 Beta is LIVE on Android — Limited slots available. Join now before it fills up!
+          <span className="inline-flex items-center gap-2">
+            <span className="w-2 h-2 bg-green-400 rounded-full animate-pulse" />
+              Beta is LIVE on Android. Limited slots available. Join now before it fills up!
+          </span>
           &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-          🟢 Beta is LIVE on Android — Limited slots available. Join now before it fills up!
+          <span className="inline-flex items-center gap-2">
+            <span className="w-2 h-2 bg-green-400 rounded-full animate-pulse" />
+              Beta is LIVE on Android. Limited slots available. Join now before it fills up!
+          </span>
         </div>
       </div>
 
@@ -88,7 +94,7 @@ export default function Navbar() {
               rel="noopener noreferrer"
               className="hidden md:inline-flex items-center gap-2 bg-gold hover:bg-navy text-white text-sm font-semibold px-4 py-2.5 rounded-full transition-colors whitespace-nowrap"
             >
-              Join the Beta — It&apos;s Free
+              Join the Beta, It&apos;s Free
             </a>
             <button
               className="xl:hidden p-2 text-navy"
@@ -128,7 +134,7 @@ export default function Navbar() {
                 className="mt-6 bg-gold text-white text-center font-semibold px-6 py-4 rounded-full text-lg"
                 onClick={() => setMenuOpen(false)}
               >
-                Join the Beta — It&apos;s Free
+                Join the Beta, It&apos;s Free
               </a>
             </motion.div>
           )}

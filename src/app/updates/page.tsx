@@ -4,9 +4,9 @@ import UpdatesSection from "@/components/UpdatesSection";
 import CTASection from "@/components/CTASection";
 
 export const metadata: Metadata = {
-  title: "Updates — AutoDrive Nigeria",
+  title: "Updates | AutoDrive Nigeria",
   description:
-    "The latest news, milestones, and announcements from AutoDrive Nigeria. We build in public — follow our journey here.",
+    "The latest news, milestones, and announcements from AutoDrive Nigeria. We build in public, follow our journey here.",
 };
 
 export default function UpdatesPage() {

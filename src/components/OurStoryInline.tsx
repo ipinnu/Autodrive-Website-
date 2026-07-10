@@ -13,7 +13,7 @@ const founders = [
   {
     name: "Ipinnuoluwa Oladipo",
     role: "Co-Founder & CTO",
-    bio: "A product engineer and manager who found his passion for technology in his final year of university. He runs a tech agency and leads AutoDrive's product development — making sure the product works, ships, and actually serves the people it was built for.",
+    bio: "A product engineer and manager who found his passion for technology in his final year of university. He runs a tech agency and leads AutoDrive's product development, making sure the product works, ships, and actually serves the people it was built for.",
     photo: "/images/founder-ipinnu.jpg",
   },
 ];
@@ -31,7 +31,7 @@ export default function OurStoryInline() {
         >
           <p className="text-gold font-semibold tracking-widest uppercase text-sm mb-4">The People Behind AutoDrive</p>
           <h2 className="font-lora text-4xl md:text-5xl font-bold text-navy mb-4">
-            We Didn&apos;t Study This Problem —{" "}
+            We Didn&apos;t Study This Problem{" "}
             <span className="text-gold">We Lived It</span>
           </h2>
           <p className="text-navy/60 text-lg max-w-2xl mx-auto">
@@ -49,7 +49,7 @@ export default function OurStoryInline() {
         >
           <div className="bg-white rounded-3xl p-8 md:p-10 shadow-sm border border-gray-100">
             <p className="text-lg text-navy/75 leading-relaxed mb-6">
-              It started with one question on May 12, 2023: <em>why is renewing car papers in Nigeria still this convoluted?</em> Two friends — Ipinnuoluwa and Victor — decided to stop complaining and start building AutoDrive. What began as a simple Google Sheet and a maintenance tracker has evolved through four major versions into the fully functional app available on the Google Play Store today.
+              It started with one question on May 12, 2023: <em>why is renewing car papers in Nigeria still this convoluted?</em> Two friends, Ipinnuoluwa and Victor, decided to stop complaining and start building AutoDrive. What began as a simple Google Sheet and a maintenance tracker has evolved through four major versions into the fully functional app available on the Google Play Store today.
             </p>
             <p className="text-lg text-navy/75 leading-relaxed">
               They didn&apos;t start with venture capital or big tech backing. They built this through late nights, failed prototypes, and two years of constant iteration. By late 2024, they had their first working model. By 2025, they were engaging in partnership talks with authorities in Lagos and Akure. Today, they are growing a community of drivers who are finally ready for a better way to stay on the road.
@@ -102,7 +102,7 @@ export default function OurStoryInline() {
         >
           <p className="text-white/70 text-lg">
             Supported by{" "}
-            <span className="text-white font-semibold">Mrs. Fehintoluwa</span> — Advisor, Government Relations
+            <span className="text-white font-semibold">Mrs. Fehintoluwa</span>, Advisor, Government Relations
           </p>
         </motion.div>
       </div>

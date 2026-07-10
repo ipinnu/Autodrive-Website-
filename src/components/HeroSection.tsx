@@ -10,17 +10,17 @@ const BETA_URL = "https://forms.gle/G3Z2agiFyVE1cEWj8";
 
 const trustItems = [
   { icon: CheckCircle, text: "No queues. No stress." },
-  { icon: Truck, text: "Real-Time Order Tracking" },
+  { icon: Truck, text: "Live Order Tracking" },
   { icon: Bell, text: "Smart renewal reminders" },
   { icon: Building2, text: "Doorstep delivery in Lagos" },
 ];
 
 const screens = [
-  { src: "/images/frame-577.png", alt: "AutoDrive home — your garage and cars", cropPosition: "top" },
+  { src: "/images/frame-577.png", alt: "AutoDrive home showing your garage and cars", cropPosition: "top" },
   { src: "/images/frame-571.png", alt: "Car profile with document tracking", cropPosition: "top" },
   { src: "/images/frame-567.png", alt: "Renewal orders with live tracking", cropPosition: "top" },
   { src: "/images/frame-568.png", alt: "Full delivery timeline", cropPosition: "top" },
-  { src: "/images/frame-570.png", alt: "Renewal cart — select documents", cropPosition: "top" },
+  { src: "/images/frame-570.png", alt: "Renewal cart to select documents", cropPosition: "top" },
 ];
 
 function RotatingPhone() {
@@ -68,8 +68,6 @@ function RotatingPhone() {
             </motion.div>
           </AnimatePresence>
 
-          {/* Home indicator */}
-          <div className="absolute bottom-2 left-1/2 -translate-x-1/2 w-24 h-[4px] bg-white/25 rounded-full z-30" />
         </div>
       </div>
 
@@ -80,7 +78,7 @@ function RotatingPhone() {
             key={i}
             onClick={() => setCurrent(i)}
             className={`h-1 rounded-full transition-all duration-300 ${
-              i === current ? "w-5 bg-gold" : "w-1.5 bg-gray-300"
+              i === current ? "w-1.5 bg-gold" : "w-1.5 bg-gray-300"
             }`}
           />
         ))}

@@ -42,7 +42,7 @@ const features = [
   {
     icon: FileCheck,
     title: "Seamless Document Renewal",
-    tagline: "Renew your car papers with one tap — no stress, no queues, just results.",
+    tagline: "Renew your car papers with one tap. No stress, no queues, just results.",
     details: [
       "Vehicle Licence, Motor Insurance, TIN, Proof of Ownership and more",
       "We work directly with a trusted network of licensed agents",
@@ -50,7 +50,7 @@ const features = [
     ],
     // Cart showing document selection per car (Vehicle License + Road Worthiness)
     image: "/images/frame-570.png",
-    imageAlt: "AutoDrive renewal cart — select documents per car",
+    imageAlt: "AutoDrive renewal cart to select documents per car",
     cropPosition: "top",
     flip: false,
   },
@@ -58,7 +58,7 @@ const features = [
     icon: Bell,
     title: "Smart Reminders",
     tagline:
-      "We remind you 90, 60, and 30 days before anything expires. With AutoRenew, we handle it automatically — so you don't have to think about it.",
+      "We remind you 90, 60, and 30 days before anything expires. With AutoRenew, we handle it automatically so you don't have to think about it.",
     details: [
       "Timely alerts via push notification, SMS, and email",
       "Access your full renewal history and digital receipts at any time",
@@ -67,23 +67,23 @@ const features = [
     // Car profile showing document expiry dates (some expired, some expiring soon)
     image: "/images/frame-571.png",
     imageAlt: "AutoDrive car profile showing document expiry status",
-    // Crop to the documents grid — the bottom portion of the screen
+    // Crop to the documents grid at the bottom portion of the screen
     cropPosition: "60% bottom",
     flip: true,
   },
   {
     icon: Package,
-    title: "Real-Time Order Tracking",
+    title: "Live Order Tracking",
     tagline:
-      "Once you place an order, watch it move from request to your doorstep — step by step.",
+      "Once you place an order, watch it move from request to your doorstep, step by step.",
     details: [
       "Monitor your document status as it moves from processing to dispatch",
       "Order reference numbers for every renewal transaction",
       "See your estimated delivery window inside the app",
     ],
-    // Full delivery timeline screen — the clearest view of the tracking flow
+    // Full delivery timeline screen with the clearest view of the tracking flow
     image: "/images/frame-568.png",
-    imageAlt: "AutoDrive order tracking timeline — from order to delivery",
+    imageAlt: "AutoDrive order tracking timeline from order to delivery",
     cropPosition: "top",
     flip: false,
   },
@@ -91,13 +91,13 @@ const features = [
     icon: AlertCircle,
     title: "Manage & Pay Fees",
     tagline:
-      "Outstanding LASTMA or VIO fine? Don't let it grow. Pay it directly in the app — no more confusion about where to go or how much to pay.",
+      "Outstanding LASTMA or VIO fine? Don't let it grow. Pay it directly in the app with no more confusion about where to go or how much to pay.",
     details: [
       "Track fines linked to your vehicle (coming soon)",
       "Pay securely without visiting any office",
-      "Stay compliant and stress-free",
+      "Stay compliant and stress free",
     ],
-    // Ongoing order screen — shows the real renewal flow
+    // Ongoing order screen showing the real renewal flow
     image: "/images/frame-567.png",
     imageAlt: "AutoDrive renewal orders screen",
     cropPosition: "top",
@@ -107,15 +107,15 @@ const features = [
     icon: Smartphone,
     title: "Instant Softcopy + Doorstep Hardcopy",
     tagline:
-      "The moment your renewal is processed, we send the softcopy to your phone. Need the physical paper? We deliver it to your home or office — no queues, no errands.",
+      "The moment your renewal is processed, we send the softcopy to your phone. Need the physical paper? We deliver it to your home or office with no queues and no errands.",
     details: [
       "Get a digital copy sent instantly to your phone for immediate use",
-      "Receive your original hardcopy within 24–48 hours in Lagos",
+      "Receive your original hardcopy within 24 to 48 hours in Lagos",
       "Expanding soon to bring doorstep delivery to more cities across Nigeria",
     ],
-    // Completed orders screen — shows "View Document" for delivered orders
+    // Completed orders screen showing "View Document" for delivered orders
     image: "/images/frame-569.png",
-    imageAlt: "AutoDrive completed renewal order — view document",
+    imageAlt: "AutoDrive completed renewal order with view document",
     cropPosition: "top",
     flip: false,
   },
@@ -123,15 +123,15 @@ const features = [
     icon: LayoutDashboard,
     title: "Your Digital Garage",
     tagline:
-      "Add all your cars in one place. Give them names. See every detail at a glance — from documents to history. Made for families with multiple cars and fleet managers alike.",
+      "Add all your cars in one place. Give them names. See every detail at a glance, from documents to history. Made for families with multiple cars and fleet managers alike.",
     details: [
       "Manage an unlimited number of vehicles under a single account",
       "View individual car profiles with nicknames, photos, and documents",
-      "Built specifically for the needs of Nigerian multi-car households",
+      "Built specifically for the needs of Nigerian multi car households",
     ],
     // Home screen showing garage image + driver's licence + My Cars list
     image: "/images/frame-577.png",
-    imageAlt: "AutoDrive home screen — your digital garage with all your cars",
+    imageAlt: "AutoDrive home screen showing your digital garage with all your cars",
     cropPosition: "top",
     flip: true,
   },

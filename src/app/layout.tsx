@@ -19,15 +19,15 @@ const sourceSans = Source_Sans_3({
 });
 
 export const metadata: Metadata = {
-  title: "AutoDrive Nigeria — Stay on the Road. We Keep You Ready.",
+  title: "AutoDrive Nigeria | Stay on the Road. We Keep You Ready.",
   description:
-    "AutoDrive is Nigeria's first fully centralized car document management platform. Renew your vehicle licence, insurance, and roadworthiness — with doorstep delivery in Lagos. Join the free Android beta today.",
+    "AutoDrive is Nigeria's first fully centralized car document management platform. Renew your vehicle licence, insurance, and roadworthiness with doorstep delivery in Lagos. Join the free Android beta today.",
   keywords:
     "car document renewal Nigeria, vehicle licence Lagos, AutoDrive Nigeria, motor insurance renewal, LASTMA fine payment, car papers Lagos",
   openGraph: {
-    title: "AutoDrive Nigeria — Stay on the Road. We Keep You Ready.",
+    title: "AutoDrive Nigeria | Stay on the Road. We Keep You Ready.",
     description:
-      "Stop worrying about expired car papers. AutoDrive handles renewals, reminders, fines, and doorstep delivery — all from your phone.",
+      "Stop worrying about expired car papers. AutoDrive handles renewals, reminders, fines, and doorstep delivery from your phone.",
     type: "website",
     locale: "en_NG",
   },

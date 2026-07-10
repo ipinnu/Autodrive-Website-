@@ -1,7 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { CheckCircle2, Clock } from "lucide-react";
+import { CheckCircle2, Clock, Check, Hourglass, TrendingUp } from "lucide-react";
 
 const achieved = [
   "Fully functional MVP is live on Google Play Store",
@@ -14,9 +14,9 @@ const achieved = [
 
 const coming = [
   "Launch on the Apple App Store",
-  "In-app payment for vehicle fines",
+  "In app payment for vehicle fines",
   "Automatic renewal system in development",
-  "24–48 hour physical delivery rolling out across Lagos",
+  "24 to 48 hour physical delivery rolling out across Lagos",
 ];
 
 export default function TractionSection() {
@@ -32,7 +32,7 @@ export default function TractionSection() {
         >
           <h2 className="font-lora text-4xl md:text-5xl font-bold text-navy mb-4">
             What We&apos;ve{" "}
-            <span className="text-gold">Built</span> — and What&apos;s Coming
+            <span className="text-gold">Built</span> and What&apos;s Coming
           </h2>
         </motion.div>
 
@@ -52,7 +52,7 @@ export default function TractionSection() {
             <ul className="space-y-4">
               {achieved.map((item, i) => (
                 <li key={i} className="flex items-start gap-3">
-                  <span className="text-gold text-lg flex-shrink-0">✅</span>
+                  <Check className="w-5 h-5 text-gold flex-shrink-0 mt-0.5" />
                   <span className="text-navy/75 leading-relaxed">{item}</span>
                 </li>
               ))}
@@ -74,15 +74,16 @@ export default function TractionSection() {
             <ul className="space-y-4 mb-8">
               {coming.map((item, i) => (
                 <li key={i} className="flex items-start gap-3">
-                  <span className="text-gold text-lg flex-shrink-0">🔜</span>
+                  <Hourglass className="w-5 h-5 text-gold flex-shrink-0 mt-0.5" />
                   <span className="text-navy/75 leading-relaxed">{item}</span>
                 </li>
               ))}
             </ul>
 
             <div className="bg-gold/10 rounded-2xl p-4">
-              <p className="text-sm text-gold font-semibold text-center">
-                💰 ₦500K+ projected early revenue · Growing waitlist
+              <p className="text-sm text-gold font-semibold text-center flex items-center justify-center gap-2">
+                <TrendingUp className="w-4 h-4" />
+                NGN 500K+ projected early revenue, Growing waitlist
               </p>
             </div>
           </motion.div>

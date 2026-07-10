@@ -3,7 +3,7 @@ import FAQSection from "@/components/FAQSection";
 import CTASection from "@/components/CTASection";
 
 export const metadata: Metadata = {
-  title: "FAQ — AutoDrive Nigeria",
+  title: "FAQ | AutoDrive Nigeria",
   description:
     "Straight answers to the questions every Nigerian driver asks about AutoDrive. No jargon, no runaround.",
 };
