@@ -20,8 +20,8 @@ const founders = [
 
 const advisor = {
   name: "Fehintoluwa Dada",
-  role: "Technical Partner, Product Strategy & Digital Transformation",
-  bio: "Fehintoluwa Dada is a UK based IT Business Analyst and Digital Product Strategist who helps teams turn complex ideas into clear, usable digital products. She supports AutoDrive with product structure, user experience, research, and process thinking, bringing a practical outside lens to how the platform can scale for real Nigerian drivers, agents, and partners.",
+  role: "Product Strategy Partner",
+  bio: "Fehintoluwa Dada is a UK-based Product Strategist and Business Analyst with expertise in digital products and organisational systems. At AutoDrive, she provides strategic support across product development, user research, and business analysis, helping build practical, scalable solutions for Nigerian drivers, agents, and partners.",
   photo: "/images/advisor-fehintoluwa.jpeg",
 };
 
