@@ -23,14 +23,31 @@ type DataState = "idle" | "loading" | "ready" | "unconfigured" | "error";
 
 type AnalyticsEvent = {
   event?: string;
+  userId?: string;
+  ts?: unknown;
   properties?: Record<string, unknown>;
 };
 
 type OrderData = {
+  userId?: string;
+  uid?: string;
+  buyerId?: string;
   createdAt?: unknown;
   paymentSubmittedAt?: unknown;
   renewedDocuments?: Record<string, { uploadedAt?: string }>;
   deliveryStatus?: string;
+};
+
+type CustomerProfile = {
+  name: string;
+  email: string;
+};
+
+type CustomerDetail = {
+  customerName: string;
+  customerEmail: string;
+  timestamp: string;
+  detail: string;
 };
 
 type DashboardMetric = {
@@ -53,6 +70,7 @@ type DashboardGroup = {
 
 type GroupSummary = {
   metrics: Record<string, number | string | null>;
+  details: Record<string, CustomerDetail[]>;
   decision?: string;
   trend?: string;
 };
@@ -170,6 +188,87 @@ function toMillis(value: unknown) {
   return null;
 }
 
+function formatTimestamp(value: unknown) {
+  const millis = toMillis(value);
+  return millis ? new Date(millis).toLocaleString() : "No timestamp";
+}
+
+function customerFor(userId: string | undefined, customers: Record<string, CustomerProfile>) {
+  if (!userId) return { customerName: "Unknown customer", customerEmail: "No email saved" };
+  const customer = customers[userId];
+  return {
+    customerName: customer?.name || userId,
+    customerEmail: customer?.email || "No email saved",
+  };
+}
+
+function eventRows(
+  events: AnalyticsEvent[],
+  customers: Record<string, CustomerProfile>,
+  event: string,
+  props: Record<string, unknown> = {},
+  detail = event,
+) {
+  return events
+    .filter((entry) => {
+      if (entry.event !== event) return false;
+      return Object.entries(props).every(([key, value]) => entry.properties?.[key] === value);
+    })
+    .slice(0, 6)
+    .map((entry) => ({
+      ...customerFor(entry.userId, customers),
+      timestamp: formatTimestamp(entry.ts),
+      detail,
+    }));
+}
+
+function combinedEventRows(
+  events: AnalyticsEvent[],
+  customers: Record<string, CustomerProfile>,
+  matchers: Array<{ event: string; props?: Record<string, unknown>; detail: string }>,
+) {
+  return events
+    .filter((entry) =>
+      matchers.some((matcher) => {
+        if (entry.event !== matcher.event) return false;
+        return Object.entries(matcher.props ?? {}).every(([key, value]) => entry.properties?.[key] === value);
+      }),
+    )
+    .slice(0, 6)
+    .map((entry) => {
+      const matcher = matchers.find((item) => {
+        if (entry.event !== item.event) return false;
+        return Object.entries(item.props ?? {}).every(([key, value]) => entry.properties?.[key] === value);
+      });
+      return {
+        ...customerFor(entry.userId, customers),
+        timestamp: formatTimestamp(entry.ts),
+        detail: matcher?.detail ?? entry.event ?? "Event",
+      };
+    });
+}
+
+function orderUserId(order: OrderData) {
+  return order.userId || order.uid || order.buyerId;
+}
+
+function orderRows(
+  orders: OrderData[],
+  customers: Record<string, CustomerProfile>,
+  predicate: (order: OrderData) => boolean,
+  timestampFor: (order: OrderData) => unknown,
+  detail: string,
+) {
+  return orders
+    .filter(predicate)
+    .slice(0, 6)
+    .map((order) => ({
+      ...customerFor(orderUserId(order), customers),
+      timestamp: formatTimestamp(timestampFor(order)),
+      detail,
+    }));
+}
+
 function averagePaidToDigitalMinutes(orders: OrderData[]) {
   const durations = orders.flatMap((order) => {
     const start = toMillis(order.paymentSubmittedAt) ?? toMillis(order.createdAt);
@@ -184,7 +283,11 @@ function averagePaidToDigitalMinutes(orders: OrderData[]) {
   return `${Math.round(average)} min`;
 }
 
-function buildSummary(events: AnalyticsEvent[], completedOrders: OrderData[]): DashboardSummary {
+function buildSummary(
+  events: AnalyticsEvent[],
+  completedOrders: OrderData[],
+  customers: Record<string, CustomerProfile>,
+): DashboardSummary {
   const createAccountTaps = eventCount(events, "cta_tapped", { ctaLabel: "Create account" });
   const formValidationErrors = eventCount(events, "error_shown", { errorCode: "form_validation" });
   const registrationViews = eventCount(events, "screen_viewed", { screenName: "RegistrationScreen" });
@@ -209,6 +312,13 @@ function buildSummary(events: AnalyticsEvent[], completedOrders: OrderData[]): D
           accountToVerifiedRate: percent(verified, createAccountTaps),
           verifiedSignInCompletion: null,
         },
+        details: {
+          registrationScreenViews: eventRows(events, customers, "screen_viewed", { screenName: "RegistrationScreen" }, "Registration screen viewed"),
+          signupAbandonmentRate: eventRows(events, customers, "form_abandoned", { formName: "buyer_registration" }, "Signup form abandoned"),
+          validationErrorRate: eventRows(events, customers, "error_shown", { errorCode: "form_validation" }, "Validation error shown"),
+          accountToVerifiedRate: eventRows(events, customers, "cta_tapped", { ctaLabel: "Email verification completed" }, "Email verification completed"),
+          verifiedSignInCompletion: [],
+        },
       },
       "automobile-registration": {
         trend: "Garage",
@@ -218,6 +328,13 @@ function buildSummary(events: AnalyticsEvent[], completedOrders: OrderData[]): D
           vehicleLookupSuccess: eventCount(events, "vehicle_lookup_success"),
           vehicleLookupTimeout: eventCount(events, "vehicle_lookup_timeout"),
           addCarAbandonmentRate: percent(addCarAbandoned, addCarOpened),
+        },
+        details: {
+          addCarSheetOpened: eventRows(events, customers, "add_car_sheet_opened", {}, "Add-car sheet opened"),
+          vehicleLookupAttempted: eventRows(events, customers, "cta_tapped", { ctaLabel: "Find my vehicle" }, "Vehicle lookup attempted"),
+          vehicleLookupSuccess: eventRows(events, customers, "vehicle_lookup_success", {}, "Vehicle lookup succeeded"),
+          vehicleLookupTimeout: eventRows(events, customers, "vehicle_lookup_timeout", {}, "Vehicle lookup timed out"),
+          addCarAbandonmentRate: eventRows(events, customers, "add_car_abandoned", {}, "Add-car flow abandoned after intent"),
         },
       },
       "renewal-payment": {
@@ -229,6 +346,16 @@ function buildSummary(events: AnalyticsEvent[], completedOrders: OrderData[]): D
           paymentFailedOrAbandoned: paymentFailed + paymentAbandoned,
           renewalConversionRate: percent(paymentSuccess, renewalStarts),
         },
+        details: {
+          renewalFlowsStarted: eventRows(events, customers, "renewal_flow_started", {}, "Renewal flow started"),
+          paymentInitiated: eventRows(events, customers, "renewal_payment_initiated", {}, "Payment screen reached"),
+          paymentSuccess: eventRows(events, customers, "renewal_payment_success", {}, "Payment successful"),
+          paymentFailedOrAbandoned: combinedEventRows(events, customers, [
+            { event: "renewal_payment_failed", detail: "Payment failed" },
+            { event: "renewal_payment_abandoned", detail: "Payment abandoned" },
+          ]),
+          renewalConversionRate: eventRows(events, customers, "renewal_payment_success", {}, "Converted from renewal to payment"),
+        },
       },
       "digital-order": {
         trend: "Fulfilment",
@@ -239,6 +366,23 @@ function buildSummary(events: AnalyticsEvent[], completedOrders: OrderData[]): D
           missingDocSupportFollowUp: eventCount(events, "cta_tapped", { ctaLabel: "Call support" }) + eventCount(events, "cta_tapped", { ctaLabel: "Email support" }) + eventCount(events, "cta_tapped", { ctaLabel: "Report an issue" }),
           paidToDigitalReceivedTime: averagePaidToDigitalMinutes(completedOrders),
         },
+        details: {
+          digitalDocumentsOpened: eventRows(events, customers, "cta_tapped", { ctaLabel: "Open order document" }, "Document opened"),
+          digitalDocumentsPreviewed: eventRows(events, customers, "cta_tapped", { ctaLabel: "Preview order document" }, "Document previewed"),
+          documentNotSentDeadEnd: eventRows(events, customers, "screen_viewed", { screenName: "document_not_sent_sheet" }, "Missing document dead end"),
+          missingDocSupportFollowUp: combinedEventRows(events, customers, [
+            { event: "cta_tapped", props: { ctaLabel: "Call support" }, detail: "Called support" },
+            { event: "cta_tapped", props: { ctaLabel: "Email support" }, detail: "Emailed support" },
+            { event: "cta_tapped", props: { ctaLabel: "Report an issue" }, detail: "Reported an issue" },
+          ]),
+          paidToDigitalReceivedTime: orderRows(
+            completedOrders,
+            customers,
+            (order) => Boolean(order.renewedDocuments && Object.values(order.renewedDocuments).some((document) => document.uploadedAt)),
+            (order) => Object.values(order.renewedDocuments ?? {}).find((document) => document.uploadedAt)?.uploadedAt,
+            "Digital document uploaded",
+          ),
+        },
       },
       delivery: {
         trend: "Delivery",
@@ -248,6 +392,19 @@ function buildSummary(events: AnalyticsEvent[], completedOrders: OrderData[]): D
           callDispatchTaps: eventCount(events, "cta_tapped", { ctaLabel: "Call dispatch phone" }),
           deliveryProblemReports: deliveryIssues,
           awaitingPhysicalDelivery: completedOrders.filter((order) => order.deliveryStatus && order.deliveryStatus !== "delivered").length,
+        },
+        details: {
+          deliveryTrackingViews: eventRows(events, customers, "screen_viewed", { screenName: "delivery_tracking" }, "Delivery tracking viewed"),
+          openLiveMapTaps: eventRows(events, customers, "cta_tapped", { ctaLabel: "Open live map" }, "Live map opened"),
+          callDispatchTaps: eventRows(events, customers, "cta_tapped", { ctaLabel: "Call dispatch phone" }, "Dispatch called"),
+          deliveryProblemReports: eventRows(events, customers, "cta_tapped", { ctaLabel: "Report a Delivery Problem" }, "Delivery problem reported"),
+          awaitingPhysicalDelivery: orderRows(
+            completedOrders,
+            customers,
+            (order) => Boolean(order.deliveryStatus && order.deliveryStatus !== "delivered"),
+            (order) => order.paymentSubmittedAt ?? order.createdAt,
+            "Awaiting physical delivery",
+          ),
         },
       },
     },
@@ -295,11 +452,14 @@ export default function DashboardPage() {
   const [user, setUser] = useState<User | null>(null);
   const [loginError, setLoginError] = useState("");
   const [activeKey, setActiveKey] = useState(groups[0].key);
+  const [drilldown, setDrilldown] = useState<{ group: DashboardGroup; metric: DashboardMetric } | null>(null);
   const [summary, setSummary] = useState<DashboardSummary | null>(null);
   const [dataState, setDataState] = useState<DataState>("idle");
 
   const activeGroup = useMemo(() => groups.find((group) => group.key === activeKey) ?? groups[0], [activeKey]);
   const activeSummary = summary?.groups?.[activeGroup.key];
+  const drilldownSummary = drilldown ? summary?.groups?.[drilldown.group.key] : null;
+  const drilldownRows = drilldown ? drilldownSummary?.details?.[drilldown.metric.apiKey] ?? [] : [];
 
   useEffect(() => {
     if (!isFirebaseConfigured) {
@@ -322,11 +482,26 @@ export default function DashboardPage() {
     Promise.all([
       getDocs(query(collection(client.db, "analytics_events"), orderBy("ts", "desc"), limit(2000))),
       getDocs(query(collection(client.db, "CompletedOrders"), limit(500))),
+      getDocs(collection(client.db, "users")),
     ])
-      .then(([eventSnapshot, orderSnapshot]) => {
+      .then(([eventSnapshot, orderSnapshot, userSnapshot]) => {
         const events = eventSnapshot.docs.map((doc) => doc.data() as AnalyticsEvent);
         const orders = orderSnapshot.docs.map((doc) => doc.data() as OrderData);
-        setSummary(buildSummary(events, orders));
+        const customers = Object.fromEntries(
+          userSnapshot.docs.map((doc) => {
+            const data = doc.data();
+            return [
+              doc.id,
+              {
+                name: [data.username, data.name, data.fullName, data.businessName]
+                  .map((value) => (typeof value === "string" ? value.trim() : ""))
+                  .find(Boolean) ?? doc.id,
+                email: typeof data.email === "string" && data.email.trim() ? data.email.trim() : "No email saved",
+              },
+            ];
+          }),
+        );
+        setSummary(buildSummary(events, orders, customers));
         setDataState("ready");
       })
       .catch(() => setDataState("error"));
@@ -376,10 +551,45 @@ export default function DashboardPage() {
         </section>
 
         <section className="mt-6 grid gap-5 xl:grid-cols-[1.1fr_0.9fr]">
-          <article className="rounded-lg border border-navy/10 bg-white p-5 shadow-sm"><div className="mb-4 flex items-start justify-between gap-4"><div><p className="text-sm font-bold uppercase tracking-[0.14em] text-gold">Focused card</p><h3 className="mt-1 font-lora text-2xl font-bold text-navy">{activeGroup.title}</h3><p className="mt-1 text-sm leading-6 text-navy/62">{activeGroup.description}</p></div><span className="rounded-full bg-navy px-3 py-1 text-xs font-black text-white">{activeSummary?.trend ?? "Waiting for Firebase"}</span></div><div className="grid gap-3 md:grid-cols-2">{activeGroup.metrics.map((metric) => <div key={metric.apiKey} className="rounded-md border border-slate-200 bg-slate-50/70 p-3"><div className="flex items-start justify-between gap-3"><div><p className="text-sm font-black text-navy">{metric.label}</p><p className="mt-1 font-mono text-xs text-navy/50">{metric.marker}</p></div><p className="text-xl font-black text-navy">{formatValue(activeSummary?.metrics?.[metric.apiKey])}</p></div><span className={`mt-3 inline-flex w-fit items-center rounded-full border px-2.5 py-1 text-xs font-bold ${statusStyles[metric.status]}`}>{statusLabels[metric.status]}</span><p className="mt-2 text-sm leading-6 text-navy/62">{metric.note}</p></div>)}</div></article>
+          <article className="rounded-lg border border-navy/10 bg-white p-5 shadow-sm"><div className="mb-4 flex items-start justify-between gap-4"><div><p className="text-sm font-bold uppercase tracking-[0.14em] text-gold">Focused card</p><h3 className="mt-1 font-lora text-2xl font-bold text-navy">{activeGroup.title}</h3><p className="mt-1 text-sm leading-6 text-navy/62">{activeGroup.description}</p></div><span className="rounded-full bg-navy px-3 py-1 text-xs font-black text-white">{activeSummary?.trend ?? "Waiting for Firebase"}</span></div><div className="grid gap-3 md:grid-cols-2">{activeGroup.metrics.map((metric) => <button type="button" onClick={() => setDrilldown({ group: activeGroup, metric })} key={metric.apiKey} className="rounded-md border border-slate-200 bg-slate-50/70 p-3 text-left transition hover:border-gold hover:bg-white"><div className="flex items-start justify-between gap-3"><div><p className="text-sm font-black text-navy">{metric.label}</p><p className="mt-1 font-mono text-xs text-navy/50">{metric.marker}</p></div><p className="text-xl font-black text-navy">{formatValue(activeSummary?.metrics?.[metric.apiKey])}</p></div><span className={`mt-3 inline-flex w-fit items-center rounded-full border px-2.5 py-1 text-xs font-bold ${statusStyles[metric.status]}`}>{statusLabels[metric.status]}</span><p className="mt-2 text-sm leading-6 text-navy/62">{metric.note}</p></button>)}</div></article>
           <aside className="rounded-lg border border-navy/10 bg-white p-5 shadow-sm"><p className="text-sm font-bold uppercase tracking-[0.14em] text-gold">Business read</p><h3 className="mt-1 font-lora text-2xl font-bold text-navy">What to decide</h3><p className="mt-2 text-sm leading-6 text-navy/65">{activeSummary?.decision ?? activeGroup.primaryQuestion}</p><div className="mt-5 space-y-3">{activeGroup.metrics.map((metric) => <div key={metric.apiKey} className="rounded-md bg-[#F4F6FA] p-3"><p className="text-sm font-black text-navy">{metric.label}</p><p className="mt-1 text-sm leading-6 text-navy/62">{metric.decision}</p></div>)}</div></aside>
         </section>
       </main>
+      {drilldown ? (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-navy/45 px-4 py-6" role="dialog" aria-modal="true">
+          <section className="max-h-[86vh] w-full max-w-3xl overflow-hidden rounded-lg bg-white shadow-2xl">
+            <div className="flex items-start justify-between gap-4 border-b border-navy/10 p-5">
+              <div>
+                <p className="text-xs font-black uppercase tracking-[0.16em] text-gold">{drilldown.group.title}</p>
+                <h3 className="mt-1 font-lora text-2xl font-bold text-navy">{drilldown.metric.label}</h3>
+                <p className="mt-1 font-mono text-xs text-navy/50">{drilldown.metric.marker}</p>
+              </div>
+              <div className="text-right">
+                <p className="text-3xl font-black text-navy">{formatValue(drilldownSummary?.metrics?.[drilldown.metric.apiKey])}</p>
+                <button type="button" onClick={() => setDrilldown(null)} className="mt-2 rounded-md border border-navy/15 px-3 py-1.5 text-sm font-bold text-navy transition hover:border-gold hover:text-gold">Close</button>
+              </div>
+            </div>
+            <div className="max-h-[62vh] overflow-y-auto p-5">
+              {drilldownRows.length ? (
+                <ul className="divide-y divide-slate-200">
+                  {drilldownRows.map((row, index) => (
+                    <li key={`${row.customerEmail}-${row.timestamp}-${index}`} className="grid gap-2 py-3 md:grid-cols-[1fr_1fr_0.8fr] md:items-center">
+                      <div>
+                        <p className="text-sm font-black text-navy">{row.customerName}</p>
+                        <p className="text-xs text-navy/55">{row.customerEmail}</p>
+                      </div>
+                      <p className="text-sm font-bold text-navy/70">{row.detail}</p>
+                      <p className="text-sm text-navy/55 md:text-right">{row.timestamp}</p>
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <p className="rounded-md bg-[#F4F6FA] p-4 text-sm font-bold text-navy/60">No customer records for this card yet.</p>
+              )}
+            </div>
+          </section>
+        </div>
+      ) : null}
     </div>
   );
 }
