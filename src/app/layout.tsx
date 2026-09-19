@@ -1,8 +1,7 @@
 import type { Metadata } from "next";
 import { Lora, Source_Sans_3 } from "next/font/google";
 import "./globals.css";
-import Navbar from "@/components/Navbar";
-import Footer from "@/components/Footer";
+import SiteChrome from "@/components/SiteChrome";
 
 const lora = Lora({
   subsets: ["latin"],
@@ -41,9 +40,7 @@ export default function RootLayout({
   return (
     <html lang="en" className={`${lora.variable} ${sourceSans.variable}`}>
       <body>
-        <Navbar />
-        <main>{children}</main>
-        <Footer />
+        <SiteChrome>{children}</SiteChrome>
       </body>
     </html>
   );

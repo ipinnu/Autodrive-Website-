@@ -13,6 +13,7 @@ const navLinks = [
   { label: "Why AutoDrive", href: "/why-autodrive" },
   { label: "Updates", href: "/updates" },
   { label: "FAQ", href: "/faq" },
+  { label: "Dashboard", href: "/dashboard" },
 ];
 
 const BETA_URL = "https://forms.gle/G3Z2agiFyVE1cEWj8";
@@ -143,3 +144,5 @@ export default function Navbar() {
     </>
   );
 }
+
+

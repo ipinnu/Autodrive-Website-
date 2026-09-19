@@ -14,7 +14,7 @@ const cards = [
     icon: Layers,
     number: "02",
     title: "The First of Its Kind",
-    body: "Government portals can be confusing and manual agents are often a gamble. AutoDrive is the first platform to unite renewals, delivery, and car management in one digital experience.",
+    body: "Manual agents are often a gamble when personal details and car papers are involved. AutoDrive is a secure first of its kind platform built to eliminate fraud, identity theft risk, and document confusion.",
   },
   {
     icon: Users,
