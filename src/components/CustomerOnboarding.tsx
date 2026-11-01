@@ -2,6 +2,7 @@
 import { useEffect, useState } from "react";
 import { BellRing, CarFront, Search } from "lucide-react";
 import { useRouter } from "next/navigation";
+import Image from "next/image";
 import { useCustomer } from "./CustomerProvider";
 import { BRANDS, DOCUMENTS, STATES, errorMessage, lookupVehicle, saveVehicle, skipOnboarding, track, type LookupResult } from "@/lib/customer";
 
@@ -38,7 +39,7 @@ export default function CustomerOnboarding({ additional = false }: { additional?
         <div className="customer-divider">or</div><button disabled={busy} className="customer-secondary customer-full" onClick={() => { setLookup(null); setMake(""); setModel(""); setStep(1); setError(""); }}>Enter vehicle details manually</button>
       </>}
       {step === 1 && <><h1>Choose your car brand</h1><p>Select the manufacturer of your vehicle.</p><label className="customer-field"><span>Search brands</span><input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Toyota, Honda, Lexus…" /></label>
-        <div className="customer-brand-scroll"><div className="customer-brands">{BRANDS.filter(([name]) => name.toLowerCase().includes(search.toLowerCase())).map(([name, logo]) => <button className="customer-brand" key={name} onClick={() => { setMake(name); setCustom(false); next(); }}><img src={`/images/customer/brands/${logo}`} alt={`${name} logo`} loading="lazy" /><span>{name}</span></button>)}</div></div>
+        <div className="customer-brand-scroll"><div className="customer-brands">{BRANDS.filter(([name]) => name.toLowerCase().includes(search.toLowerCase())).map(([name, logo]) => <button className="customer-brand" key={name} onClick={() => { setMake(name); setCustom(false); next(); }}><Image src={`/images/customer/brands/${logo}`} alt={`${name} logo`} width={64} height={64} sizes="64px" /><span>{name}</span></button>)}</div></div>
         <button className="customer-link customer-small mt-5" onClick={() => { setMake(""); setCustom(true); next(); }}>I don’t see my brand</button></>}
       {step === 2 && <><h1>Tell us about your vehicle</h1><p>A few details help us keep the right documents together.</p><form onSubmit={(e) => { e.preventDefault(); if (!make.trim() || !model.trim() || Number(year) < 1950 || Number(year) > new Date().getFullYear() + 1) { setError("Check your make, model and year."); return; } next(); }}>
         <label className="customer-field"><span>Make</span><input required value={make} readOnly={!custom && !lookup} onChange={(e) => setMake(e.target.value)} /></label>
