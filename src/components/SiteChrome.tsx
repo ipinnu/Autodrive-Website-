@@ -6,7 +6,7 @@ import Footer from "@/components/Footer";
 
 export default function SiteChrome({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
-  const isDashboard = pathname.startsWith("/dashboard");
+  const isDashboard = pathname.startsWith("/dashboard") || pathname.startsWith("/renew");
 
   if (isDashboard) {
     return <main>{children}</main>;

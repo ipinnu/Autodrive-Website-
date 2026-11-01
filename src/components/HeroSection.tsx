@@ -124,22 +124,22 @@ export default function HeroSection() {
             </p>
 
             <div className="flex flex-col sm:flex-row gap-4 mb-10">
+              <Link
+                href="/renew"
+                className="inline-flex items-center justify-center gap-2 bg-gold hover:bg-navy text-white font-semibold text-lg px-7 py-4 rounded-full transition-colors shadow-lg shadow-gold/25"
+              >
+                Renew now
+                <ArrowRight className="w-5 h-5" />
+              </Link>
               <a
                 href={BETA_URL}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center justify-center gap-2 bg-gold hover:bg-navy text-white font-semibold text-lg px-7 py-4 rounded-full transition-colors shadow-lg shadow-gold/25"
-              >
-                <Download className="w-5 h-5" />
-                Join the Android Beta
-              </a>
-              <Link
-                href="/features"
                 className="inline-flex items-center justify-center gap-2 border-2 border-navy text-navy hover:bg-navy hover:text-white font-semibold text-lg px-7 py-4 rounded-full transition-colors"
               >
-                See How It Works
-                <ArrowRight className="w-4 h-4" />
-              </Link>
+                <Download className="w-4 h-4" />
+                Get the Android app
+              </a>
             </div>
 
             <div className="grid grid-cols-2 gap-3">

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Menu, X } from "lucide-react";
+import { Menu, X, ArrowRight } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
 import Image from "next/image";
@@ -13,7 +13,6 @@ const navLinks = [
   { label: "Why AutoDrive", href: "/why-autodrive" },
   { label: "Updates", href: "/updates" },
   { label: "FAQ", href: "/faq" },
-  { label: "Dashboard", href: "/dashboard" },
 ];
 
 const BETA_URL = "https://forms.gle/G3Z2agiFyVE1cEWj8";
@@ -65,7 +64,7 @@ export default function Navbar() {
               alt="AutoDrive"
               width={160}
               height={52}
-              className="h-14 w-auto"
+              className="h-10 md:h-14 w-auto"
               priority
             />
           </Link>
@@ -89,6 +88,9 @@ export default function Navbar() {
 
           {/* CTA + hamburger */}
           <div className="flex items-center gap-3 flex-shrink-0">
+            <Link href="/renew" className="inline-flex items-center gap-2 rounded-full bg-navy px-4 py-2.5 text-sm font-bold text-white transition-colors hover:bg-gold focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-navy">
+              Renew now <ArrowRight className="h-4 w-4" aria-hidden="true" />
+            </Link>
             <a
               href={BETA_URL}
               target="_blank"
@@ -128,6 +130,9 @@ export default function Navbar() {
                   {link.label}
                 </Link>
               ))}
+              <Link href="/renew" onClick={() => setMenuOpen(false)} className="mt-5 inline-flex items-center justify-center gap-2 rounded-full bg-navy px-6 py-4 text-lg font-bold text-white">
+                Renew now <ArrowRight className="h-5 w-5" aria-hidden="true" />
+              </Link>
               <a
                 href={BETA_URL}
                 target="_blank"
