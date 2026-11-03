@@ -31,7 +31,7 @@ export function CustomerWelcome() {
   return <div className="customer-welcome"><div>
     <span className="customer-eyebrow">Your papers. Your peace of mind.</span><h1>Stay ready for<br />the road ahead.</h1>
     <p>Add your vehicle, keep an eye on your documents and renew your papers with AutoDrive. Your account works on the website and the app.</p>
-    <AccountTypeChoice /><div className="customer-actions"><Link className="customer-primary" href="/renew/sign-up">Create account</Link><Link className="customer-secondary" href="/renew/sign-in">Sign in</Link></div>
+    <div className="customer-actions"><Link className="customer-primary" href="/renew/sign-up">Create account</Link><Link className="customer-secondary" href="/renew/sign-in">Sign in</Link></div>
     <div className="customer-divider">or connect with</div><GoogleButton onError={setError} />
     {error && <div className="customer-error" role="alert">{error}</div>}
     <p className="customer-small mt-5"><CheckCircle2 className="inline mr-1" size={15} />Personal vehicles and organizations. One simple start.</p>
@@ -40,7 +40,7 @@ export function CustomerWelcome() {
 
 export function CustomerSignUp() {
   const { user, profile, accountType } = useCustomer();
-  const [name, setName] = useState(""); const [email, setEmail] = useState(""); const [phone, setPhone] = useState("");
+  const [name, setName] = useState(""); const [email, setEmail] = useState("");
   const [password, setPassword] = useState(""); const [confirm, setConfirm] = useState(""); const [referral, setReferral] = useState("");
   const [busy, setBusy] = useState(false); const [error, setError] = useState(""); const [showPassword, setShowPassword] = useState(false);
   useEffect(() => { if (user) { setName((v) => v || user.displayName || ""); setEmail(user.email || ""); } }, [user]);
@@ -53,14 +53,14 @@ export function CustomerSignUp() {
       event.preventDefault(); if (busy) return; setBusy(true); setError("");
       let created: Awaited<ReturnType<typeof createUserWithEmailAndPassword>> | null = null;
       try {
-        validateDetails(name, phone, isCompleting ? undefined : password, isCompleting ? undefined : confirm);
+        validateDetails(name, undefined, isCompleting ? undefined : password, isCompleting ? undefined : confirm);
         const configured = client();
         const account = user || (created = await createUserWithEmailAndPassword(configured.auth, email.trim(), password.trim())).user;
         const agentId = profile?.agentId || await registrationAgent(referral);
-        const data = registrationData({ uid: account.uid, fullName: name, email: account.email || email, phone, agentId, accountType });
+        const data = registrationData({ uid: account.uid, fullName: name, email: account.email || email, agentId, accountType });
         await setDoc(doc(configured.db, "users", account.uid), profile ? {
           firstName: data.firstName, lastName: data.lastName, fullName: data.fullName,
-          email: data.email, phone: data.phone, phoneNumber: data.phoneNumber,
+          email: data.email,
           ...(!profile.agentId ? { agentId } : {}), ...(!profile.accountType ? { accountType } : {}),
         } : data, { merge: Boolean(profile) });
         void track("cta_tapped", { screenName: "RegistrationScreen", ctaLabel: "Create account", accountType });
@@ -73,7 +73,6 @@ export function CustomerSignUp() {
       <section className="customer-section"><h3>Your details</h3>
         <label className="customer-field"><span>Full name</span><input required autoComplete="name" value={name} onChange={(e) => setName(e.target.value)} placeholder="Your full name" /></label>
         <label className="customer-field"><span>Email</span><input required type="email" autoComplete="email" disabled={isCompleting} value={email} onChange={(e) => setEmail(e.target.value)} placeholder="you@example.com" /></label>
-        <label className="customer-field"><span>Phone number</span><input required type="tel" autoComplete="tel" value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="0801 234 5678" /></label>
       </section>
       {!isCompleting && <section className="customer-section"><h3>Account security</h3>
         <label className="customer-field"><span>Password</span><input required type={showPassword ? "text" : "password"} autoComplete="new-password" value={password} onChange={(e) => setPassword(e.target.value)} /></label>

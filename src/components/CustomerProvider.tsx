@@ -52,7 +52,7 @@ export default function CustomerProvider({ children }: { children: React.ReactNo
   const destination = loading || problem ? null : !user
     ? (publicPaths.includes(pathname) ? null : "/renew/welcome")
     : !profile ? (pathname === "/renew/sign-up" ? null : "/renew/sign-up")
-    : profile.role === "buyer" && (!profile.fullName?.trim() || !(profile.phoneNumber || profile.phone)?.trim())
+    : profile.role === "buyer" && !profile.fullName?.trim()
       ? (pathname === "/renew/sign-up" ? null : "/renew/sign-up")
     : profile.role !== "buyer" ? null
     : !user.emailVerified ? (pathname === "/renew/verify" ? null : "/renew/verify")

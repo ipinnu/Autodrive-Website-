@@ -56,10 +56,12 @@ export function errorMessage(error: unknown): string {
   return messages[code] || (error instanceof Error ? error.message : "Something went wrong. Please try again.");
 }
 
-export function validateDetails(fullName: string, phone: string, password?: string, confirm?: string) {
+export function validateDetails(fullName: string, phone: string | undefined, password?: string, confirm?: string) {
   if (fullName.trim().length < 2) throw new Error("Enter your full name.");
-  const digits = phone.replace(/\D/g, "");
-  if (digits.length < 10 || digits.length > 15) throw new Error("Enter a valid phone number.");
+  if (phone !== undefined) {
+    const digits = phone.replace(/\D/g, "");
+    if (digits.length < 10 || digits.length > 15) throw new Error("Enter a valid phone number.");
+  }
   if (password !== undefined && (password.length < 8 || !/[0-9]/.test(password) || !/[^A-Za-z0-9\s]/.test(password))) {
     throw new Error("Use at least 8 characters, one number and one special character.");
   }
@@ -81,10 +83,10 @@ export async function registrationAgent(referral: string): Promise<string> {
   return "SKY2zKmGw1R7CuB6ND2c9XZtD4E2";
 }
 
-export function registrationData(input: { uid: string; fullName: string; email: string; phone: string; agentId: string; accountType: AccountType }) {
+export function registrationData(input: { uid: string; fullName: string; email: string; phone?: string; agentId: string; accountType: AccountType }) {
   const names = input.fullName.trim().split(/\s+/);
   return { firstName: names[0], lastName: names.slice(1).join(" "), fullName: input.fullName.trim(),
-    email: input.email.trim(), phone: input.phone.trim(), phoneNumber: input.phone.trim(), uid: input.uid,
+    email: input.email.trim(), ...(input.phone !== undefined ? { phone: input.phone.trim(), phoneNumber: input.phone.trim() } : {}), uid: input.uid,
     agentId: input.agentId, role: "buyer", accountType: input.accountType, buyerOnboardingCompleted: false,
     createdAt: serverTimestamp() };
 }

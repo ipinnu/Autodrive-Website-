@@ -33,6 +33,12 @@ test('invalid contacts and mismatched passwords fail before signup', () => {
   assert.throws(() => service.validateDetails('Ada Okafor', '08012345678', 'TestOnly123!', 'different'), /match/);
   service.validateDetails('Ada Okafor', '08012345678', 'TestOnly123!', 'TestOnly123!');
 });
+test('signup accepts no phone without inventing contact fields', () => {
+  service.validateDetails('Ada Okafor', undefined, 'TestOnly123!', 'TestOnly123!');
+  const result = service.registrationData({ uid: 'buyer-test', fullName: 'Ada Okafor', email: 'ada@example.invalid', agentId: 'assigned-agent', accountType: 'personal' });
+  assert.equal(Object.hasOwn(result, 'phone'), false);
+  assert.equal(Object.hasOwn(result, 'phoneNumber'), false);
+});
 const vehicle = { make: 'Toyota', model: 'Corolla', year: 2020, type: 'Salon', plate: 'ABC-123-DE', state: 'Lagos', documents: ['Vehicle License'], expiries: { 'Vehicle License': '2027-06-01' }, onboarding: true };
 test('unverified customers cannot bypass the gate through vehicle saves', async () => {
   currentUser.emailVerified = false;
