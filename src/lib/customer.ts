@@ -68,6 +68,18 @@ export function validateDetails(fullName: string, phone: string | undefined, pas
   if (password !== undefined && password !== confirm) throw new Error("Passwords do not match.");
 }
 
+export async function saveContact(fullName: string, phone: string) {
+  const { auth, db } = client();
+  if (!auth.currentUser) throw new Error("Sign in first.");
+  validateDetails(fullName, phone.trim() || undefined);
+  const names = fullName.trim().split(/\s+/);
+  await setDoc(doc(db, "users", auth.currentUser.uid), {
+    fullName: fullName.trim(), firstName: names[0], lastName: names.slice(1).join(" "),
+    phone: phone.trim(), phoneNumber: phone.trim(), lastUpdated: serverTimestamp(),
+  }, { merge: true });
+  void track("cta_tapped", { screenName: "web_fleet", ctaLabel: "Save account contact" });
+}
+
 export async function registrationAgent(referral: string): Promise<string> {
   const { db } = client();
   if (referral.trim()) {
@@ -151,7 +163,7 @@ export async function loadVehicles(uid: string): Promise<Vehicle[]> {
   return Promise.all(snapshot.docs.map(async (car) => {
     const documents = await getDocs(collection(car.ref, "documents"));
     return { ...car.data(), carId: car.id, documents: documents.docs.map((d) => ({ id: d.id,
-      type: String(d.data().type || d.id), expiration: String(d.data().expiration ?? d.data().expirationDate ?? "Not Set") })) } as Vehicle;
+      type: String(d.data().type || d.id), expiration: normalizeExpiry(d.data().expiration ?? d.data().expirationDate) })) } as Vehicle;
   }));
 }
 
@@ -188,9 +200,30 @@ export async function skipOnboarding() {
   void track("empty_state_seen", { screenName: "buyer_dashboard", emptyStateType: "garage_skipped_onboarding" });
 }
 
+export function normalizeExpiry(value: unknown): string {
+  if (value && typeof value === "object" && "toDate" in value && typeof value.toDate === "function") value = value.toDate();
+  if (value instanceof Date) return Number.isFinite(value.getTime()) ? new Date(value.getTime() + 3600000).toISOString().slice(0, 10) : "Not Set";
+  const text = String(value ?? "").trim();
+  const iso = text.match(/^(\d{4})-(\d{2})-(\d{2})(?:$|T|\s)/);
+  const numeric = text.match(/^(\d{1,2})[/-](\d{1,2})[/-](\d{4})$/);
+  const words = text.match(/^([A-Za-z]{3}) (\d{1,2}), (\d{4})$/);
+  const dayFirst = text.match(/^(\d{1,2}) ([A-Za-z]{3}) (\d{4})$/);
+  const months = ["jan", "feb", "mar", "apr", "may", "jun", "jul", "aug", "sep", "oct", "nov", "dec"];
+  let parts: string[] | undefined;
+  if (iso) parts = [iso[1], iso[2], iso[3]];
+  else if (numeric) parts = [numeric[3], numeric[2], numeric[1]];
+  else if (words) parts = [words[3], String(months.indexOf(words[1].toLowerCase()) + 1), words[2]];
+  else if (dayFirst) parts = [dayFirst[3], String(months.indexOf(dayFirst[2].toLowerCase()) + 1), dayFirst[1]];
+  if (!parts) return "Not Set";
+  const normalized = `${parts[0]}-${parts[1].padStart(2, "0")}-${parts[2].padStart(2, "0")}`;
+  const time = Date.parse(normalized + "T00:00:00Z");
+  return Number.isFinite(time) && new Date(time).toISOString().slice(0, 10) === normalized ? normalized : "Not Set";
+}
+
 export function expiryStatus(expiration: string): "expired" | "soon" | "active" | "missing" {
-  if (!/^\d{4}-\d{2}-\d{2}$/.test(expiration)) return "missing";
-  const date = Date.parse(expiration + "T00:00:00+01:00");
+  const normalized = normalizeExpiry(expiration);
+  if (normalized === "Not Set") return "missing";
+  const date = Date.parse(normalized + "T00:00:00+01:00");
   if (!Number.isFinite(date)) return "missing";
   const day = Math.floor((Date.now() + 3600000) / 86400000) * 86400000 - 3600000;
   const days = Math.round((date - day) / 86400000);

@@ -15,7 +15,7 @@ const navLinks = [
   { label: "FAQ", href: "/faq" },
 ];
 
-const BETA_URL = "https://forms.gle/G3Z2agiFyVE1cEWj8";
+const IOS_WAITLIST_URL = "https://forms.gle/G3Z2agiFyVE1cEWj8";
 
 export default function Navbar() {
   const [scrolled, setScrolled] = useState(false);
@@ -35,21 +35,30 @@ export default function Navbar() {
 
   return (
     <>
-      {/* Announcement ticker */}
-      <div className="bg-navy text-white text-sm py-2 overflow-hidden">
-        <div className="ticker-content inline-block px-4">
-          <span className="inline-flex items-center gap-2">
-            <span className="w-2 h-2 bg-green-400 rounded-full animate-pulse" />
-              Beta is LIVE on Android. Limited slots available. Join now before it fills up!
-          </span>
-          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-          <span className="inline-flex items-center gap-2">
-            <span className="w-2 h-2 bg-green-400 rounded-full animate-pulse" />
-              Beta is LIVE on Android. Limited slots available. Join now before it fills up!
-          </span>
+      <aside aria-label="AutoDrive Android app" className="border-b border-white/10 bg-navy text-white">
+        <div className="mx-auto flex max-w-7xl flex-col items-center justify-between gap-3 px-4 py-3 text-center sm:flex-row sm:gap-5 sm:px-8 sm:text-left">
+          <div className="flex flex-col items-center gap-1 sm:items-start lg:flex-row lg:items-center lg:gap-4">
+            <span className="text-[11px] font-bold uppercase tracking-widest text-gold">
+              Now available on Android
+            </span>
+            <p className="text-sm font-medium">Your papers renewed. Your day uninterrupted.</p>
+          </div>
+          <a
+            href="https://play.google.com/store/apps/details?id=com.ipinnu.AutodriveNew"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex min-h-11 shrink-0 items-center justify-center gap-2 rounded-lg bg-white px-4 text-sm font-bold text-navy transition-colors hover:bg-gold hover:text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-white"
+          >
+            <svg width="20" height="22" viewBox="0 0 24 26" fill="none" aria-hidden="true" className="shrink-0">
+              <path d="M1 1L14 13L1 25V1Z" fill="#4285F4" />
+              <path d="M1 1L17.5 10L14 13L1 1Z" fill="#34A853" />
+              <path d="M1 25L14 13L17.5 16L1 25Z" fill="#EA4335" />
+              <path d="M14 13L17.5 10L23 13L17.5 16L14 13Z" fill="#FBBC04" />
+            </svg>
+            Get the app
+          </a>
         </div>
-      </div>
-
+      </aside>
       {/* Navbar */}
       <nav
         className={`sticky top-0 z-50 bg-white transition-all duration-300 ${
@@ -92,12 +101,13 @@ export default function Navbar() {
               Renew now <ArrowRight className="h-4 w-4" aria-hidden="true" />
             </Link>
             <a
-              href={BETA_URL}
+              href={IOS_WAITLIST_URL}
               target="_blank"
               rel="noopener noreferrer"
-              className="hidden md:inline-flex items-center gap-2 bg-gold hover:bg-navy text-white text-sm font-semibold px-4 py-2.5 rounded-full transition-colors whitespace-nowrap"
+              className="hidden md:inline-flex items-center gap-2 bg-black hover:bg-neutral-800 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-black text-white text-sm font-semibold px-4 py-2.5 rounded-full transition-colors whitespace-nowrap"
             >
-              Join the Beta, It&apos;s Free
+              <Image src="/images/apple-logo.svg" alt="" width={20} height={20} aria-hidden="true" />
+              Join the iOS waitlist
             </a>
             <button
               className="xl:hidden p-2 text-navy"
@@ -134,13 +144,14 @@ export default function Navbar() {
                 Renew now <ArrowRight className="h-5 w-5" aria-hidden="true" />
               </Link>
               <a
-                href={BETA_URL}
+                href={IOS_WAITLIST_URL}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="mt-6 bg-gold text-white text-center font-semibold px-6 py-4 rounded-full text-lg"
+                className="mt-6 inline-flex items-center justify-center gap-2 bg-black hover:bg-neutral-800 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-black text-white text-center font-semibold px-6 py-4 rounded-full text-lg"
                 onClick={() => setMenuOpen(false)}
               >
-                Join the Beta, It&apos;s Free
+                <Image src="/images/apple-logo.svg" alt="" width={20} height={20} aria-hidden="true" />
+              Join the iOS waitlist
               </a>
             </motion.div>
           )}

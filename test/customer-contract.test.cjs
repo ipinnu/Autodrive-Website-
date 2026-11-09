@@ -70,3 +70,9 @@ test('impossible expiry date never commits', async () => {
   await assert.rejects(service.saveExpiry('car-test', 'Vehicle License', '2027-02-30'), /expiry date/);
   assert.equal(commits, 0);
 });
+test('expiry views recognize the same legacy strings and timestamps as the app', () => {
+  for (const value of ['2027-06-01', '2027-06-01T00:00:00Z', '01/06/2027', '01-06-2027', 'Jun 1, 2027', '1 Jun 2027', { toDate: () => new Date('2027-05-31T23:00:00Z') }]) {
+    assert.equal(service.normalizeExpiry(value), '2027-06-01');
+  }
+  for (const value of ['Not Set', '', '2027-02-30', null]) assert.equal(service.normalizeExpiry(value), 'Not Set');
+});

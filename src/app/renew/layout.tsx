@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import CustomerProvider from "@/components/CustomerProvider";
+import "@daypicker/react/style.css";
 import "./customer.css";
 
 export const metadata: Metadata = { title: "Renew your papers | AutoDrive", robots: { index: false, follow: false } };

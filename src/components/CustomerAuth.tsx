@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { createUserWithEmailAndPassword, deleteUser, GoogleAuthProvider, sendEmailVerification, sendPasswordResetEmail, signInWithEmailAndPassword, signInWithPopup } from "firebase/auth";
+import { createUserWithEmailAndPassword, deleteUser, GoogleAuthProvider, OAuthProvider, sendEmailVerification, sendPasswordResetEmail, signInWithEmailAndPassword, signInWithPopup } from "firebase/auth";
 import { doc, serverTimestamp, setDoc } from "firebase/firestore";
 import Image from "next/image";
 import Link from "next/link";
@@ -17,22 +17,49 @@ export function AccountTypeChoice() {
   </div></fieldset>;
 }
 function GoogleMark() { return <svg viewBox="0 0 48 48" aria-hidden="true"><path fill="#4285F4" d="M44 24.5c0-1.5-.1-3-.4-4.5H24v8.5h11.2a9.5 9.5 0 0 1-4.2 6.3v5.3h6.8C41.8 36.5 44 31.1 44 24.5Z"/><path fill="#34A853" d="M24 45c5.6 0 10.3-1.9 13.8-5.1L31 34.6c-1.9 1.3-4.2 2-7 2-5.4 0-10-3.6-11.6-8.5h-7v5.5A21 21 0 0 0 24 45Z"/><path fill="#FBBC05" d="M12.4 28.1a12.6 12.6 0 0 1 0-8.2v-5.5h-7a21 21 0 0 0 0 19.2l7-5.5Z"/><path fill="#EA4335" d="M24 11.4c3 0 5.7 1 7.8 3.1l5.9-5.9A20 20 0 0 0 24 3 21 21 0 0 0 5.4 14.4l7 5.5c1.6-4.9 6.2-8.5 11.6-8.5Z"/></svg>; }
-export function GoogleButton({ onError }: { onError: (message: string) => void }) {
-  const [busy, setBusy] = useState(false);
-  return <button type="button" className="customer-google" disabled={busy} onClick={async () => {
-    if (busy) return; setBusy(true); onError("");
-    try { await signInWithPopup(client().auth, new GoogleAuthProvider()); void track("cta_tapped", { screenName: "web_signup", ctaLabel: "Sign in with Google" }); }
-    catch (e) { onError(errorMessage(e)); } finally { setBusy(false); }
-  }}><GoogleMark />{busy ? "Connecting…" : "Continue with Google"}</button>;
+function SocialSignIn({ onError, screenName }: { onError: (message: string) => void; screenName: string }) {
+  const [busy, setBusy] = useState<"Google" | "Apple" | null>(null);
+
+  async function signIn(method: "Google" | "Apple") {
+    if (busy) return;
+    setBusy(method);
+    onError("");
+    try {
+      const provider = method === "Google" ? new GoogleAuthProvider() : new OAuthProvider("apple.com");
+      await signInWithPopup(client().auth, provider);
+      void track("cta_tapped", { screenName, ctaLabel: "Sign in with " + method });
+    } catch (error) {
+      const code = (error as { code?: string })?.code;
+      if (code === "auth/popup-closed-by-user") return;
+      const message = code === "auth/account-exists-with-different-credential"
+        ? "Sign in using the method you already use for this email."
+        : errorMessage(error);
+      onError(message);
+      void track("error_shown", { screenName, errorCode: code || "social_sign_in_failed", errorMessage: message });
+    } finally {
+      setBusy(null);
+    }
+  }
+
+  return <div className="grid gap-3">
+    <button type="button" className="customer-google" disabled={busy !== null} onClick={() => void signIn("Google")}>
+      <GoogleMark />{busy === "Google" ? "Connecting…" : "Continue with Google"}
+    </button>
+    {process.env.NEXT_PUBLIC_APPLE_SIGN_IN_ENABLED === "true" &&
+      <button type="button" className="customer-google" disabled={busy !== null} onClick={() => void signIn("Apple")}>
+        <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M17.1 12.3c0-2 1.6-3 1.7-3.1-1-1.5-2.6-1.7-3.2-1.7-1.4-.1-2.7.8-3.4.8-.7 0-1.8-.8-3-.8-1.5 0-2.9.9-3.7 2.2-1.6 2.7-.4 6.7 1.1 8.9.7 1.1 1.6 2.3 2.8 2.3 1.1 0 1.6-.7 3-.7 1.4 0 1.8.7 3 .7s2-1.1 2.7-2.2c.9-1.2 1.2-2.5 1.3-2.6-.1 0-2.3-.9-2.3-3.8ZM14.7 6c.6-.8 1.1-1.8 1-2.9-.9.1-2.1.6-2.8 1.4-.6.7-1.1 1.8-1 2.8 1 .1 2.2-.5 2.8-1.3Z"/></svg>
+        {busy === "Apple" ? "Connecting…" : "Continue with Apple"}
+      </button>}
+  </div>;
 }
 
 export function CustomerWelcome() {
   const [error, setError] = useState("");
   return <div className="customer-welcome"><div>
-    <span className="customer-eyebrow">Your papers. Your peace of mind.</span><h1>Stay ready for<br />the road ahead.</h1>
-    <p>Add your vehicle, keep an eye on your documents and renew your papers with AutoDrive. Your account works on the website and the app.</p>
+    <span className="customer-eyebrow">Your papers. Your peace of mind.</span><h1>Your papers, renewed.<br />Your day, uninterrupted.</h1>
+    <p>Renew your vehicle papers online, follow your agent’s progress and get your documents delivered. Start with your vehicle. Your account also works in the AutoDrive app.</p>
     <div className="customer-actions"><Link className="customer-primary" href="/renew/sign-up">Create account</Link><Link className="customer-secondary" href="/renew/sign-in">Sign in</Link></div>
-    <div className="customer-divider">or connect with</div><GoogleButton onError={setError} />
+    <div className="customer-divider">or connect with</div><SocialSignIn onError={setError} screenName="web_welcome" />
     {error && <div className="customer-error" role="alert">{error}</div>}
     <p className="customer-small mt-5"><CheckCircle2 className="inline mr-1" size={15} />Personal vehicles and organizations. One simple start.</p>
   </div><div className="customer-welcome-art"><Image src="/images/customer/jeepintro.jpg" alt="Your AutoDrive garage" width={420} height={420} priority /></div></div>;
@@ -84,7 +111,7 @@ export function CustomerSignUp() {
       {error && <div role="alert" className="customer-error">{error}</div>}
       <button type="submit" disabled={busy} className="customer-primary customer-full">{busy ? "Saving your account…" : isCompleting ? "Save and continue" : "Create account"}</button>
     </form>
-    {!isCompleting && <><div className="customer-divider">or</div><GoogleButton onError={setError} /><p className="customer-small text-center mt-5">Already have an account? <Link className="customer-link" href="/renew/sign-in">Sign in</Link></p></>}
+    {!isCompleting && <><div className="customer-divider">or</div><SocialSignIn onError={setError} screenName="web_signup" /><p className="customer-small text-center mt-5">Already have an account? <Link className="customer-link" href="/renew/sign-in">Sign in</Link></p></>}
   </div>;
 }
 
@@ -106,7 +133,7 @@ export function CustomerSignIn() {
       }}>Forgot password?</button>
       {error && <div className="customer-error" role="alert">{error}</div>}{notice && <div className="customer-notice" role="status">{notice}</div>}
       <button disabled={busy} className="customer-primary customer-full" type="submit">{busy ? "Please wait…" : "Sign in"}</button>
-    </form><div className="customer-divider">or</div><GoogleButton onError={setError} />
+    </form><div className="customer-divider">or</div><SocialSignIn onError={setError} screenName="web_signin" />
     <p className="customer-small text-center mt-5">New to AutoDrive? <Link className="customer-link" href="/renew/sign-up">Create account</Link></p>
   </div>;
 }

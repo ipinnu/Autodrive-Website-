@@ -27,7 +27,6 @@ export default function CTASection() {
         >
           {/* Badge */}
           <div className="inline-flex items-center gap-2 bg-gold/20 text-gold text-sm font-semibold px-4 py-2 rounded-full mb-8 border border-gold/30">
-            <span className="w-2 h-2 bg-gold rounded-full animate-pulse" />
             Beta Now Live, Limited Spots
           </div>
 

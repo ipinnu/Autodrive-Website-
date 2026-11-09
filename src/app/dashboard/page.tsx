@@ -131,8 +131,8 @@ const groups: DashboardGroup[] = [
       { label: "Renewal flows started", apiKey: "renewalFlowsStarted", marker: "renewal_flow_started", status: "available", note: "Fires when the buyer starts renewal from car/document surfaces.", decision: "This is the strongest demand signal before money is involved." },
       { label: "Reached payment", apiKey: "paymentInitiated", marker: "renewal_payment_initiated", status: "available", note: "Fires when checkout/payment screen opens.", decision: "If renewal starts but payment reach is low, quote/agent selection is blocking." },
       { label: "Payments successful", apiKey: "paymentSuccess", marker: "renewal_payment_success", status: "available", note: "Fires after successful payment verification path.", decision: "This is the client-side launch conversion anchor." },
-      { label: "Failed or abandoned", apiKey: "paymentFailedOrAbandoned", marker: "renewal_payment_failed / renewal_payment_abandoned", status: "available", note: "Separates hard failures from cancelled or abandoned checkout.", decision: "High abandonment points to trust, pricing, or payment UX issues." },
-      { label: "Renewal conversion", apiKey: "renewalConversionRate", marker: "renewal_flow_started -> renewal_payment_success", status: "derived", note: "Derived from started renewal flows and successful payments.", decision: "Use this for weekly go/no-go launch confidence." },
+      { label: "Payment failed/abandoned", apiKey: "paymentFailedOrAbandoned", marker: "renewal_payment_failed / renewal_payment_abandoned", status: "available", note: "Only counts users who reached checkout and then failed or abandoned payment.", decision: "High checkout abandonment points to trust, pricing, or payment UX issues." },
+      { label: "Did not reach payment", apiKey: "prePaymentDropOff", marker: "renewal_flow_started - renewal_payment_initiated", status: "derived", note: "This is the missing gap between renewal intent and the payment screen.", decision: "High pre-payment drop-off means quote, agent choice, or renewal setup is blocking buyers before checkout." },
     ],
   },
   {
@@ -214,7 +214,6 @@ function eventRows(
       if (entry.event !== event) return false;
       return Object.entries(props).every(([key, value]) => entry.properties?.[key] === value);
     })
-    .slice(0, 6)
     .map((entry) => ({
       ...customerFor(entry.userId, customers),
       timestamp: formatTimestamp(entry.ts),
@@ -234,7 +233,6 @@ function combinedEventRows(
         return Object.entries(matcher.props ?? {}).every(([key, value]) => entry.properties?.[key] === value);
       }),
     )
-    .slice(0, 6)
     .map((entry) => {
       const matcher = matchers.find((item) => {
         if (entry.event !== item.event) return false;
@@ -261,11 +259,31 @@ function orderRows(
 ) {
   return orders
     .filter(predicate)
-    .slice(0, 6)
     .map((order) => ({
       ...customerFor(orderUserId(order), customers),
       timestamp: formatTimestamp(timestampFor(order)),
       detail,
+    }));
+}
+
+function prePaymentDropOffRows(
+  events: AnalyticsEvent[],
+  customers: Record<string, CustomerProfile>,
+) {
+  const reachedPaymentByUser = new Set(
+    events
+      .filter((entry) => entry.event === "renewal_payment_initiated")
+      .map((entry) => entry.userId)
+      .filter(Boolean),
+  );
+
+  return events
+    .filter((entry) => entry.event === "renewal_flow_started")
+    .filter((entry) => !entry.userId || !reachedPaymentByUser.has(entry.userId))
+    .map((entry) => ({
+      ...customerFor(entry.userId, customers),
+      timestamp: formatTimestamp(entry.ts),
+      detail: "Started renewal; no payment screen marker found in loaded events",
     }));
 }
 
@@ -344,7 +362,7 @@ function buildSummary(
           paymentInitiated: eventCount(events, "renewal_payment_initiated"),
           paymentSuccess,
           paymentFailedOrAbandoned: paymentFailed + paymentAbandoned,
-          renewalConversionRate: percent(paymentSuccess, renewalStarts),
+          prePaymentDropOff: Math.max(renewalStarts - eventCount(events, "renewal_payment_initiated"), 0),
         },
         details: {
           renewalFlowsStarted: eventRows(events, customers, "renewal_flow_started", {}, "Renewal flow started"),
@@ -354,7 +372,7 @@ function buildSummary(
             { event: "renewal_payment_failed", detail: "Payment failed" },
             { event: "renewal_payment_abandoned", detail: "Payment abandoned" },
           ]),
-          renewalConversionRate: eventRows(events, customers, "renewal_payment_success", {}, "Converted from renewal to payment"),
+          prePaymentDropOff: prePaymentDropOffRows(events, customers),
         },
       },
       "digital-order": {
@@ -563,6 +581,7 @@ export default function DashboardPage() {
                 <p className="text-xs font-black uppercase tracking-[0.16em] text-gold">{drilldown.group.title}</p>
                 <h3 className="mt-1 font-lora text-2xl font-bold text-navy">{drilldown.metric.label}</h3>
                 <p className="mt-1 font-mono text-xs text-navy/50">{drilldown.metric.marker}</p>
+                <p className="mt-2 text-sm font-bold text-navy/55">{drilldownRows.length.toLocaleString()} matching records in the loaded data</p>
               </div>
               <div className="text-right">
                 <p className="text-3xl font-black text-navy">{formatValue(drilldownSummary?.metrics?.[drilldown.metric.apiKey])}</p>
