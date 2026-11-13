@@ -4,12 +4,14 @@ import Link from "next/link";
 import VehicleIcon from "./VehicleIcon";
 import { CarFront, Plus, RefreshCw } from "lucide-react";
 import { useCustomer } from "./CustomerProvider";
-import { errorMessage, expiryStatus, loadVehicles, saveContact, saveExpiry, saveRegistration, STATES, track, type Vehicle } from "@/lib/customer";
+import { addVehicleDocument, DOCUMENTS, errorMessage, expiryStatus, loadVehicles, saveContact, saveExpiry, saveRegistration, STATES, track, type Vehicle } from "@/lib/customer";
 
 export default function CustomerFleet() {
   const { user, profile } = useCustomer(); const [vehicles, setVehicles] = useState<Vehicle[]>([]);
   const [loading, setLoading] = useState(true); const [error, setError] = useState(""); const [filter, setFilter] = useState("all");
   const [editing, setEditing] = useState<{ carId: string; documentId: string; date: string } | null>(null); const [saving, setSaving] = useState(false);
+  const [adding, setAdding] = useState<{ carId: string; type: string; date: string } | null>(null);
+  const [addError, setAddError] = useState("");
   const [registration, setRegistration] = useState<{ carId: string; plate: string; state: string } | null>(null);
   const [contact, setContact] = useState<{ fullName: string; phone: string } | null>(null);
   const [contactError, setContactError] = useState("");
@@ -19,14 +21,64 @@ export default function CustomerFleet() {
   const expired = documents.filter((d) => expiryStatus(d.expiration) === "expired").length;
   const soon = documents.filter((d) => expiryStatus(d.expiration) === "soon").length;
   const shown = filter === "all" ? vehicles : vehicles.filter((c) => c.documents.some((d) => expiryStatus(d.expiration) === filter));
+  const missingTypes = (car: Vehicle) => DOCUMENTS.filter((type) => !car.documents.some(
+    (document) => document.type.toLowerCase() === type.toLowerCase() || document.id === type,
+  ));
+  const addingCar = vehicles.find((car) => car.carId === adding?.carId);
+  const availableTypes = addingCar ? missingTypes(addingCar) : [];
   return <div className="customer-main"><div className="customer-heading"><div><span className="customer-eyebrow">{profile?.accountType === "organization" ? "Organization account" : "Personal account"}</span><h1>Your garage.</h1><p>Welcome back{profile?.firstName ? `, ${profile.firstName}` : ""}. Keep your papers ready for the road.</p></div><Link className="customer-primary" href="/renew/add-vehicle"><Plus size={18} />Add vehicle</Link></div>
     <div className="customer-stats">{[["Vehicles", vehicles.length], ["Documents tracked", documents.length], ["Expired", expired], ["Expiring in 30 days", soon]].map(([label, count]) => <div className="customer-stat" key={label}><span>{label}</span><strong>{count}</strong></div>)}</div>
     <div className="customer-card"><div className="flex items-center justify-between gap-3"><h2>Your garage</h2><button className="customer-link customer-small flex gap-2 items-center" onClick={() => void refresh()} disabled={loading}><RefreshCw size={15} />Refresh</button></div>
       <div className="customer-tabs">{[["all", "All vehicles"], ["expired", "Expired"], ["soon", "Expiring soon"]].map(([id, label]) => <button key={id} className={filter === id ? "selected" : ""} onClick={() => setFilter(id)}>{label}</button>)}</div>
       {error && <div role="alert" className="customer-error">{error}</div>}
       {loading ? <p role="status">Loading your vehicles…</p> : !shown.length ? <div className="customer-empty"><CarFront size={42} /><h2>{vehicles.length ? "No vehicles match this view" : "Let’s build your garage"}</h2><p>{vehicles.length ? "Your tracked documents will appear here as they enter their renewal window." : "Add your vehicle by plate lookup or enter its details manually."}</p>{!vehicles.length && <Link className="customer-primary" href="/renew/add-vehicle">Add your first vehicle</Link>}</div>
-      : <div className="customer-table-wrap"><table className="customer-garage-table"><thead><tr><th>Vehicle</th><th style={{ textAlign: "center" }}>Manage</th><th>Plate / state</th><th>Documents</th><th>Action</th></tr></thead><tbody>{shown.map((car) => <tr key={car.carId}><td><div className="flex items-center gap-3"><VehicleIcon make={car.make} /><div><strong>{car.name}</strong><span className="customer-small customer-muted">{car.year} · {car.type}</span></div></div></td><td style={{ textAlign: "center", whiteSpace: "nowrap" }}><button className="customer-secondary customer-small" aria-label={`Manage ${car.name}`} onClick={() => { setError(""); setRegistration({ carId: car.carId, plate: car.registration?.plateNumber || "", state: car.registration?.state || "" }); void track("cta_tapped", { screenName: "web_fleet", ctaLabel: "Manage vehicle", carId: car.carId }); }}>Manage</button></td><td>{car.registration?.plateNumber || "Not added"}<br /><span className="customer-small customer-muted">{car.registration?.state || "State not added"}</span></td><td>{!car.documents.length && <p className="customer-small customer-muted">No documents saved for this vehicle yet.</p>}{car.documents.map((document) => { const status = expiryStatus(document.expiration); return <div className="mb-3 last:mb-0" key={document.id}><div className="flex items-center gap-2"><span>{document.type}</span><span className={`customer-badge ${status}`}>{status === "missing" ? "Add date" : status === "soon" ? "Expiring soon" : status === "expired" ? "Expired" : "Active"}</span></div><button className="customer-link customer-small" onClick={() => setEditing({ carId: car.carId, documentId: document.id, date: status === "missing" ? "" : document.expiration })}>{status === "missing" ? "Set expiry date" : document.expiration}</button></div>; })}</td><td><Link className="customer-secondary customer-small" href={`/renew/orders?car=${encodeURIComponent(car.carId)}`} onClick={() => void track("renewal_flow_started", { carId: car.carId, documentType: "multiple", agentId: profile?.agentId })}>Renew papers</Link></td></tr>)}</tbody></table></div>}
+      : <div className="customer-table-wrap"><table className="customer-garage-table"><thead><tr><th>Vehicle</th><th style={{ textAlign: "center" }}>Manage</th><th>Plate / state</th><th>Documents</th><th>Action</th></tr></thead><tbody>{shown.map((car) => <tr key={car.carId}><td><div className="flex items-center gap-3"><VehicleIcon make={car.make} /><div><strong>{car.name}</strong><span className="customer-small customer-muted">{car.year} · {car.type}</span></div></div></td><td style={{ textAlign: "center", whiteSpace: "nowrap" }}><button className="customer-secondary customer-small" aria-label={`Manage ${car.name}`} onClick={() => { setError(""); setRegistration({ carId: car.carId, plate: car.registration?.plateNumber || "", state: car.registration?.state || "" }); void track("cta_tapped", { screenName: "web_fleet", ctaLabel: "Manage vehicle", carId: car.carId }); }}>Manage</button></td><td>{car.registration?.plateNumber || "Not added"}<br /><span className="customer-small customer-muted">{car.registration?.state || "State not added"}</span></td><td>{!car.documents.length && <p className="customer-small customer-muted">No documents saved for this vehicle yet.</p>}{car.documents.map((document) => { const status = expiryStatus(document.expiration); return <div className="mb-3 last:mb-0" key={document.id}><div className="flex items-center gap-2"><span>{document.type}</span><span className={`customer-badge ${status}`}>{status === "missing" ? "Add date" : status === "soon" ? "Expiring soon" : status === "expired" ? "Expired" : "Active"}</span></div><button className="customer-link customer-small" onClick={() => setEditing({ carId: car.carId, documentId: document.id, date: status === "missing" ? "" : document.expiration })}>{status === "missing" ? "Set expiry date" : document.expiration}</button></div>; })}
+      {missingTypes(car).length > 0 && <button type="button" className="customer-link customer-small mt-2 inline-flex items-center gap-1"
+        onClick={() => { setAddError(""); setAdding({ carId: car.carId, type: "", date: "" }); }}>
+        <Plus size={15} aria-hidden="true" /> Add document
+      </button>}
+      </td><td><Link className="customer-secondary customer-small" href={`/renew/orders?car=${encodeURIComponent(car.carId)}`} onClick={() => void track("renewal_flow_started", { carId: car.carId, documentType: "multiple", agentId: profile?.agentId })}>Renew papers</Link></td></tr>)}</tbody></table></div>}
     </div>
+    {adding && <div role="dialog" aria-modal="true" aria-labelledby="add-document-title"
+      className="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto bg-black/35 p-5"
+      onKeyDown={(event) => { if (event.key === "Escape" && !saving) setAdding(null); }}>
+      <form className="customer-card w-full max-w-md" onSubmit={async (event) => {
+        event.preventDefault();
+        if (saving || !availableTypes.includes(adding.type)) return;
+        setSaving(true);
+        setAddError("");
+        try {
+          await addVehicleDocument(adding.carId, adding.type, adding.date);
+          setAdding(null);
+          await refresh();
+        } catch (failure) {
+          const message = errorMessage(failure);
+          setAddError(message);
+          void track("error_shown", { screenName: "web_fleet", errorCode: "add_document_failed", errorMessage: message });
+        } finally {
+          setSaving(false);
+        }
+      }}>
+        <h2 id="add-document-title">Add document</h2>
+        {addingCar && <p className="customer-small">{addingCar.name}</p>}
+        <label className="customer-field"><span>Document type</span>
+          <select required autoFocus disabled={saving} value={adding.type}
+            onChange={(event) => setAdding({ ...adding, type: event.target.value })}>
+            <option value="">Choose a document</option>
+            {availableTypes.map((type) => <option key={type} value={type}>{type}</option>)}
+          </select>
+        </label>
+        <label className="customer-field"><span>Expiry date (optional)</span>
+          <input type="date" disabled={saving} value={adding.date}
+            onChange={(event) => setAdding({ ...adding, date: event.target.value })} />
+        </label>
+        {addError && <div className="customer-error" role="alert">{addError}</div>}
+        <div className="customer-actions">
+          <button type="button" className="customer-secondary" disabled={saving} onClick={() => setAdding(null)}>Cancel</button>
+          <button type="submit" className="customer-primary" disabled={saving || !adding.type}>{saving ? "Saving…" : "Add document"}</button>
+        </div>
+      </form>
+    </div>}
     {editing && <div role="dialog" aria-modal="true" aria-labelledby="expiry-title" className="fixed inset-0 z-50 flex items-center justify-center bg-black/35 p-5" onClick={() => !saving && setEditing(null)}><form className="customer-card w-full max-w-md" onClick={(e) => e.stopPropagation()} onSubmit={async (e) => { e.preventDefault(); setSaving(true); setError(""); try { await saveExpiry(editing.carId, editing.documentId, editing.date); setEditing(null); await refresh(); } catch (e) { setError(errorMessage(e)); } finally { setSaving(false); } }}><h2 id="expiry-title">{editing.documentId}</h2><label className="customer-field"><span>Expiry date</span><input type="date" value={editing.date} onChange={(e) => setEditing({ ...editing, date: e.target.value })} /></label>{error && <div className="customer-error" role="alert">{error}</div>}<div className="customer-actions"><button className="customer-secondary" disabled={saving} type="button" onClick={() => setEditing(null)}>Cancel</button><button className="customer-primary" disabled={saving} type="submit">{saving ? "Saving…" : "Save date"}</button></div></form></div>}
     {registration && <div role="dialog" aria-modal="true" aria-labelledby="registration-title" className="fixed inset-0 z-50 flex items-center justify-center bg-black/35 p-5"><form className="customer-card w-full max-w-md" onSubmit={async (e) => { e.preventDefault(); setSaving(true); setError(""); try { await saveRegistration(registration.carId, registration.plate, registration.state); setRegistration(null); await refresh(); } catch (e) { setError(errorMessage(e)); } finally { setSaving(false); } }}><h2 id="registration-title">Registration details</h2><label className="customer-field"><span>Plate number</span><input required value={registration.plate} onChange={(e) => setRegistration({ ...registration, plate: e.target.value.toUpperCase() })} /></label><label className="customer-field"><span>Registration state</span><select required value={registration.state} onChange={(e) => setRegistration({ ...registration, state: e.target.value })}><option value="">Choose state</option>{STATES.map((s) => <option key={s}>{s}</option>)}</select></label>{error && <div role="alert" className="customer-error">{error}</div>}<div className="customer-actions"><button disabled={saving} type="button" className="customer-secondary" onClick={() => setRegistration(null)}>Cancel</button><button disabled={saving} type="submit" className="customer-primary">{saving ? "Saving…" : "Save details"}</button></div></form></div>}
     <div className="customer-card"><div className="flex items-center justify-between gap-3"><h3>Your account contact</h3><button className="customer-secondary customer-small" onClick={() => { setContactError(""); setContact({ fullName: profile?.fullName || "", phone: profile?.phoneNumber || profile?.phone || "" }); void track("cta_tapped", { screenName: "web_fleet", ctaLabel: "Edit account contact" }); }}>Edit</button></div><p className="customer-small mb-0">{profile?.fullName}<br />{profile?.email}<br />{profile?.phoneNumber || profile?.phone}</p></div>

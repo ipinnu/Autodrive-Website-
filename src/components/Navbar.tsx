@@ -35,7 +35,7 @@ export default function Navbar() {
 
   return (
     <>
-      <aside aria-label="AutoDrive Android app" className="border-b border-white/10 bg-navy text-white">
+      {pathname !== "/" && <aside aria-label="AutoDrive Android app" className="border-b border-white/10 bg-navy text-white">
         <div className="mx-auto flex max-w-7xl flex-col items-center justify-between gap-3 px-4 py-3 text-center sm:flex-row sm:gap-5 sm:px-8 sm:text-left">
           <div className="flex flex-col items-center gap-1 sm:items-start lg:flex-row lg:items-center lg:gap-4">
             <span className="text-[11px] font-bold uppercase tracking-widest text-gold">
@@ -58,7 +58,7 @@ export default function Navbar() {
             Get the app
           </a>
         </div>
-      </aside>
+      </aside>}
       {/* Navbar */}
       <nav
         className={`sticky top-0 z-50 bg-white transition-all duration-300 ${

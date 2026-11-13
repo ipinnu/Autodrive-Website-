@@ -39,7 +39,7 @@ export default function CustomerOnboarding({ additional = false }: { additional?
     if (busy) return;
     setBusy(true); setError("");
     try {
-      const documents = lookup?.documents.length ? lookup.documents.map((document) => document.type) : DOCUMENTS.slice(0, 3);
+      const documents = [...new Set([...DOCUMENTS.slice(0, 3), ...(lookup?.documents.map((document) => document.type) ?? [])])];
       await saveVehicle({ make, model, year: Number(year), type, plate, state: "", documents,
         expiries: Object.fromEntries((lookup?.documents || []).map((d) => [d.type, d.expiryDate])), lookup, onboarding: !additional });
       router.replace("/renew");
@@ -54,6 +54,8 @@ export default function CustomerOnboarding({ additional = false }: { additional?
         }}><label className="customer-field"><span>Find your vehicle by licence plate</span><input required maxLength={24} value={plate} onChange={(e) => { setPlate(e.target.value.toUpperCase()); setLookup(null); }} placeholder="ABC123DE" /></label>
           <button className="customer-primary customer-full" type="submit" disabled={busy}><Search size={17} />{busy ? "Checking your plate…" : "Find my vehicle"}</button></form>
         {lookup && <div className="customer-lookup-card"><h3>{lookup.make} {lookup.model}</h3><strong>{lookup.plateNumber}</strong><p className="customer-small">Check that these details match your vehicle.</p>
+          {DOCUMENTS.slice(0, 3).some((type) => !lookup.documents.some((item) => item.type === type && item.expiryDate)) &&
+            <p className="customer-small">You can enter any missing expiry dates after saving your vehicle.</p>}
           <ul className="customer-small mb-5">{lookup.documents.map((d) => <li key={d.type}>{d.type}: {d.expiryDate}</li>)}</ul>
           <button className="customer-primary" onClick={() => { setMake(lookup.make); setModel(lookup.model); setType(lookup.appVehicleType); setPlate(lookup.plateNumber); setStep(2); setError(""); if (!year) playYearCue(); }}>Yes, this is my vehicle</button></div>}
         <div className="customer-divider">or</div><button disabled={busy} className="customer-secondary customer-full" onClick={() => { setLookup(null); setMake(""); setModel(""); setStep(1); setError(""); }}>Enter vehicle details manually</button>

@@ -1,4 +1,4 @@
-import { addDoc, collection, doc, getDoc, getDocs, increment, serverTimestamp, setDoc, writeBatch } from "firebase/firestore";
+import { addDoc, collection, doc, getDoc, getDocs, increment, runTransaction, serverTimestamp, setDoc, writeBatch } from "firebase/firestore";
 import { getFirebaseClient } from "./firebase";
 
 export type AccountType = "personal" | "organization";
@@ -146,7 +146,7 @@ export async function saveVehicle(input: { make: string; model: string; year: nu
     const parsed = expiration === "Not Set" ? null : new Date(`${expiration}T00:00:00Z`);
     if (parsed && (!Number.isFinite(parsed.getTime()) || parsed.toISOString().slice(0, 10) !== expiration)) throw new Error("Check the expiry date for " + type);
     batch.set(documentRef, { type, expiration, expirationDate: expiration, isExpiringSoon: false, isExpired: false,
-      createdFromOnboarding: input.onboarding, ...(input.lookup ? { source: "vehicle_lookup" } : {}) });
+      createdFromOnboarding: input.onboarding, ...(input.lookup?.documents.some((item) => item.type === type && item.expiryDate === expiration) ? { source: "vehicle_lookup" } : {}) });
     for (const kind of ["before", "after"]) batch.set(doc(db, "notification_history", scheduleId(documentRef.path, kind)), {
       scheduleType: "renewal_reminder", documentPath: documentRef.path, kind, scheduleState: "dirty", dueAt: 0,
     }, { merge: true });
@@ -165,6 +165,32 @@ export async function loadVehicles(uid: string): Promise<Vehicle[]> {
     return { ...car.data(), carId: car.id, documents: documents.docs.map((d) => ({ id: d.id,
       type: String(d.data().type || d.id), expiration: normalizeExpiry(d.data().expiration ?? d.data().expirationDate) })) } as Vehicle;
   }));
+}
+
+export async function addVehicleDocument(carId: string, type: string, date: string) {
+  const { auth, db } = client();
+  const user = auth.currentUser;
+  if (!user?.emailVerified) throw new Error("Sign in with a verified account first.");
+  if (!DOCUMENTS.includes(type)) throw new Error("Choose a document type.");
+  if (date && (!/^\d{4}-\d{2}-\d{2}$/.test(date) || normalizeExpiry(date) !== date)) {
+    throw new Error("Enter a valid expiry date.");
+  }
+  const expiration = date || "Not Set";
+  const carRef = doc(db, "cars", user.uid, "carDetails", carId);
+  const ref = doc(carRef, "documents", type);
+  await runTransaction(db, async (transaction) => {
+    const car = await transaction.get(carRef);
+    const existing = await transaction.get(ref);
+    if (!car.exists()) throw new Error("This vehicle is no longer available.");
+    if (existing.exists()) throw new Error("This document already exists. Edit its expiry date instead.");
+    transaction.set(ref, { type, expiration, expirationDate: expiration, isExpiringSoon: false, isExpired: false });
+    for (const kind of ["before", "after"]) {
+      transaction.set(doc(db, "notification_history", scheduleId(ref.path, kind)), {
+        scheduleType: "renewal_reminder", documentPath: ref.path, kind, scheduleState: "dirty", dueAt: 0,
+      }, { merge: true });
+    }
+  });
+  void track("cta_tapped", { screenName: "web_fleet", ctaLabel: "Add document", carId, documentType: type });
 }
 
 export async function saveExpiry(carId: string, documentId: string, expiration: string) {

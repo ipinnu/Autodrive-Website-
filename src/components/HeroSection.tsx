@@ -2,11 +2,11 @@
 
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { CheckCircle, Truck, Bell, Building2, Download, ArrowRight } from "lucide-react";
+import { CheckCircle, Truck, Bell, Building2, Download, ArrowRight, ArrowDown } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 
-const BETA_URL = "https://forms.gle/G3Z2agiFyVE1cEWj8";
+const ANDROID_URL = "https://play.google.com/store/apps/details?id=com.ipinnu.AutodriveNew";
 
 const trustItems = [
   { icon: CheckCircle, text: "No queues. No stress." },
@@ -16,7 +16,7 @@ const trustItems = [
 ];
 
 const screens = [
-  { src: "/images/frame-577.png", alt: "AutoDrive home showing your garage and cars", cropPosition: "top" },
+  { src: "/images/frame-577.png", alt: "AutoDrive home showing your vehicles", cropPosition: "top" },
   { src: "/images/frame-571.png", alt: "Car profile with document tracking", cropPosition: "top" },
   { src: "/images/frame-567.png", alt: "Renewal orders with live tracking", cropPosition: "top" },
   { src: "/images/frame-568.png", alt: "Full delivery timeline", cropPosition: "top" },
@@ -34,7 +34,7 @@ function RotatingPhone() {
   return (
     <div className="relative flex flex-col items-center">
       {/* Glow behind phone */}
-      <div className="absolute inset-0 bg-gold/15 rounded-full blur-3xl scale-75 opacity-70 pointer-events-none" />
+      <div className="absolute inset-0 rounded-full bg-[#9fb3f3]/40 blur-3xl pointer-events-none" />
 
       {/* Black iPhone shell */}
       <div className="relative bg-[#1a1a1a] rounded-[3rem] p-[4px] shadow-2xl shadow-black/50 w-[260px]">
@@ -76,6 +76,8 @@ function RotatingPhone() {
         {screens.map((_, i) => (
           <button
             key={i}
+            aria-label={screens[i].alt}
+            aria-pressed={i === current}
             onClick={() => setCurrent(i)}
             className={`h-1 rounded-full transition-all duration-300 ${
               i === current ? "w-1.5 bg-gold" : "w-1.5 bg-gray-300"
@@ -89,7 +91,8 @@ function RotatingPhone() {
 
 export default function HeroSection() {
   return (
-    <section id="home" className="bg-off-white min-h-[90vh] flex items-center section-padding pt-12 pb-20">
+    <section id="home" className="relative isolate overflow-hidden bg-[#f8f9fd] section-padding py-16 lg:py-24">
+      <div aria-hidden="true" className="pointer-events-none absolute inset-0 -z-10 bg-[radial-gradient(ellipse_at_85%_35%,#dce4ff,transparent_55%),radial-gradient(ellipse_at_10%_90%,#e8f1ff,transparent_42%)]" />
       <div className="container-wide w-full">
         <div className="grid lg:grid-cols-2 gap-12 lg:gap-16 items-center">
           {/* Left: Text */}
@@ -98,46 +101,51 @@ export default function HeroSection() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.7, ease: "easeOut" }}
           >
-            <motion.div
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ delay: 0.2 }}
-              className="inline-flex items-center gap-2 bg-gold/10 text-gold text-sm font-semibold px-4 py-2 rounded-full mb-6 border border-gold/20"
-            >
-              Beta Live on Android
-            </motion.div>
-
-            <h1 className="font-lora text-4xl md:text-5xl lg:text-5xl xl:text-6xl font-bold text-navy leading-tight mb-6">
-              Stop Worrying About Your{" "}
-              <span className="text-gold">Car Papers.</span>
-              <br />
-              Your Garage,{" "}
-              <span className="text-gold">Fully Digital.</span>
+            <h1 className="font-lora text-4xl sm:text-5xl xl:text-6xl font-bold text-navy tracking-tight leading-[1.1] mb-6">
+              Renew your car papers from your phone.
             </h1>
 
             <p className="text-lg md:text-xl text-navy/70 leading-relaxed mb-8 max-w-xl">
-              AutoDrive is the app built for Nigerian drivers tired of queues,
-              late fines and expired documents. Keep your cars and documents in
-              one place, get reminded before anything expires and renew papers
-              easily with delivery right to your doorstep.
+              Check expiry dates and get your renewed papers delivered in Lagos.
             </p>
 
             <div className="flex flex-col sm:flex-row gap-4 mb-10">
               <Link
                 href="/renew"
-                className="inline-flex items-center justify-center gap-2 bg-gold hover:bg-navy text-white font-semibold text-lg px-7 py-4 rounded-full transition-colors shadow-lg shadow-gold/25"
+                className="inline-flex items-center justify-center gap-2 bg-navy hover:bg-[#204583] text-white font-semibold px-7 py-4 rounded-xl transition-colors shadow-lg shadow-navy/20"
               >
                 Renew now
                 <ArrowRight className="w-5 h-5" />
               </Link>
               <a
-                href={BETA_URL}
+                href={ANDROID_URL}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center justify-center gap-2 border-2 border-navy text-navy hover:bg-navy hover:text-white font-semibold text-lg px-7 py-4 rounded-full transition-colors"
+                className="inline-flex items-center justify-center gap-2 border border-navy/15 bg-white/80 text-navy hover:bg-white hover:border-navy/35 font-semibold px-7 py-4 rounded-xl transition-colors"
               >
                 <Download className="w-4 h-4" />
                 Get the Android app
+              </a>
+            </div>
+
+            <div className="mb-8 flex flex-col items-start gap-x-4 sm:flex-row sm:flex-wrap sm:items-center">
+              <p className="text-sm leading-relaxed text-navy/75 sm:text-base">
+                Car papers still valid? When last did you check?
+              </p>
+              <a
+                href="#plate-check"
+                onClick={(event) => {
+                  const section = document.getElementById("plate-check");
+                  if (!section) return;
+                  event.preventDefault();
+                  const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+                  section.scrollIntoView({ behavior: reduceMotion ? "instant" : "smooth" });
+                  document.getElementById("home-plate-number")?.focus({ preventScroll: true });
+                }}
+                className="inline-flex shrink-0 min-h-11 items-center gap-2 font-semibold text-navy underline decoration-[#a1824a] underline-offset-4 hover:text-[#204583] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-navy"
+              >
+                Check my plate
+                <ArrowDown className="h-4 w-4" aria-hidden="true" />
               </a>
             </div>
 
@@ -156,7 +164,7 @@ export default function HeroSection() {
             initial={{ opacity: 0, x: 40 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.8, ease: "easeOut", delay: 0.3 }}
-            className="flex justify-center lg:justify-end"
+            className="relative flex justify-center overflow-hidden rounded-[2rem] border border-white/90 bg-white/35 px-5 py-8 shadow-[0_24px_80px_-40px_rgba(32,54,108,0.45)] sm:py-10"
           >
             <RotatingPhone />
           </motion.div>

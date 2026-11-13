@@ -3,6 +3,7 @@
 import { Phone, Mail, MapPin, Instagram } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
+import { usePathname } from "next/navigation";
 
 const BETA_URL = "https://forms.gle/G3Z2agiFyVE1cEWj8";
 
@@ -24,6 +25,7 @@ const footerLinks = {
 };
 
 export default function Footer() {
+  const isHomepage = usePathname() === "/";
   return (
     <footer id="contact" className="bg-navy text-white">
       <div className="section-padding border-b border-white/10">
@@ -141,6 +143,16 @@ export default function Footer() {
           </p>
         </div>
       </div>
+      {isHomepage && (
+        <p className="container-wide px-4 pb-5 text-center text-xs leading-relaxed text-white/70 md:px-8">
+          Photos by{" "}
+          <a className="underline underline-offset-2" href="https://commons.wikimedia.org/wiki/File:A_female_LASTMA_officer.traffic_officer_in_Lagos_Nigeria.jpg">Oreoluwa Adetimehin</a>
+          {" "}(<a className="underline underline-offset-2" href="https://creativecommons.org/licenses/by-sa/4.0/">CC BY-SA 4.0</a>, cropped and resized),{" "}
+          <a className="underline underline-offset-2" href="https://www.pexels.com/photo/a-man-looking-at-his-watch-7869703/">Barbara Olsen</a>
+          {" "}and{" "}
+          <a className="underline underline-offset-2" href="https://www.pexels.com/photo/woman-reading-documents-while-in-her-car-8052206/">RDNE Stock project</a>.
+        </p>
+      )}
     </footer>
   );
 }

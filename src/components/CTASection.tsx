@@ -8,16 +8,19 @@ const ANDROID_URL = "https://play.google.com/store/apps/details?id=com.ipinnu.Au
 
 const trustBadges = [
   { icon: Lock, label: "Secure" },
-  { icon: Shield, label: "Nigerian Built" },
+  { icon: Shield, label: "Verified" },
   { icon: Smartphone, label: "Available on Android" },
 ];
 
-export default function CTASection() {
+export default function CTASection({ showLaunchBadges = true, compact = false }: { showLaunchBadges?: boolean; compact?: boolean }) {
   return (
-    <section className="section-padding bg-navy relative overflow-hidden">
-      {/* Background decoration */}
-      <div className="absolute top-0 right-0 w-96 h-96 bg-gold/10 rounded-full -translate-y-1/2 translate-x-1/2 blur-3xl" />
-      <div className="absolute bottom-0 left-0 w-96 h-96 bg-gold/10 rounded-full translate-y-1/2 -translate-x-1/2 blur-3xl" />
+    <section className={compact ? "relative bg-navy px-4 pb-16 md:px-8 md:pb-24 lg:px-16" : "section-padding bg-navy relative overflow-hidden"}>
+      {!compact && (
+        <>
+          <div className="absolute top-0 right-0 w-96 h-96 bg-gold/10 rounded-full -translate-y-1/2 translate-x-1/2 blur-3xl" />
+          <div className="absolute bottom-0 left-0 w-96 h-96 bg-gold/10 rounded-full translate-y-1/2 -translate-x-1/2 blur-3xl" />
+        </>
+      )}
 
       <div className="container-wide relative z-10 text-center max-w-3xl">
         <motion.div
@@ -26,19 +29,27 @@ export default function CTASection() {
           viewport={{ once: true }}
           transition={{ duration: 0.7 }}
         >
-          {/* Badge */}
+          {showLaunchBadges && (
           <div className="inline-flex items-center gap-2 bg-gold/20 text-gold text-sm font-semibold px-4 py-2 rounded-full mb-8 border border-gold/30">
             AutoDrive Is Live
           </div>
+          )}
 
-          <h2 className="font-lora text-4xl md:text-5xl lg:text-6xl font-bold text-white mb-6 leading-tight">
-            Don&apos;t Get Caught With{" "}
-            <span className="text-gold">Expired Papers</span> Again
-          </h2>
-
-          <p className="text-white/70 text-xl leading-relaxed mb-10">
-            Track expiry dates, renew your vehicle papers, and get them delivered. Manage it all with AutoDrive on Android.
-          </p>
+          {compact ? (
+            <h2 className="mb-6 font-lora text-3xl font-semibold text-white sm:text-4xl">
+              Get AutoDrive on Android
+            </h2>
+          ) : (
+            <>
+              <h2 className="font-lora text-4xl md:text-5xl lg:text-6xl font-bold text-white mb-6 leading-tight">
+                Don&apos;t Get Caught With{" "}
+                <span className="text-gold">Expired Papers</span> Again
+              </h2>
+              <p className="text-white/70 text-xl leading-relaxed mb-10">
+                Track expiry dates, renew your vehicle papers, and get them delivered. Manage it all with AutoDrive on Android.
+              </p>
+            </>
+          )}
 
           {/* CTA Button */}
           <motion.a
@@ -65,7 +76,7 @@ export default function CTASection() {
 
           {/* Trust badges */}
           <div className="flex flex-wrap justify-center gap-6">
-            {trustBadges.map(({ icon: Icon, label }) => (
+            {trustBadges.filter(({ icon }) => showLaunchBadges || icon !== Smartphone).map(({ icon: Icon, label }) => (
               <div key={label} className="flex items-center gap-2 text-white/70">
                 <Icon className="w-5 h-5 text-gold" />
                 <span className="font-medium">{label}</span>

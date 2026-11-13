@@ -26,7 +26,7 @@ const personas = [
 
 export default function WhoSection() {
   return (
-    <section className="section-padding bg-navy">
+    <section className="section-padding bg-[#10295a] bg-[radial-gradient(ellipse_at_top_right,#31477f,transparent_65%)]">
       <div className="container-wide">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -50,16 +50,18 @@ export default function WhoSection() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ duration: 0.5, delay: i * 0.1 }}
-              className="bg-white/5 border border-white/10 rounded-3xl p-7 hover:bg-white/10 transition-all duration-300 hover:-translate-y-1"
+              className="rounded-[1.75rem] border border-white/15 bg-gradient-to-br from-white/10 to-white/5 p-6 shadow-[inset_0_1px_0_rgba(255,255,255,0.08)] transition-colors hover:border-white/30 sm:p-8"
             >
-              <div className="mb-5"><persona.icon className="w-12 h-12 text-gold" /></div>
+              <div className="mb-5 inline-flex h-12 w-12 items-center justify-center rounded-2xl border border-white/15 bg-white/10 text-[#ead7aa]">
+                <persona.icon aria-hidden="true" className="h-6 w-6" strokeWidth={1.75} />
+              </div>
               <h3 className="font-lora font-bold text-xl text-white mb-1">
                 {persona.title}
               </h3>
-              <p className="text-gold text-sm font-medium mb-4">
+              <p className="mb-4 text-sm font-medium text-[#ead7aa]">
                 {persona.subtitle}
               </p>
-              <p className="text-white/65 leading-relaxed text-sm">
+              <p className="text-sm leading-relaxed text-white/75">
                 {persona.body}
               </p>
             </motion.div>
