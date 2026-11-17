@@ -1,10 +1,12 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { CarFront, Search } from "lucide-react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { useCustomer } from "./CustomerProvider";
-import { BRANDS, DOCUMENTS, errorMessage, lookupVehicle, saveVehicle, skipOnboarding, track, type LookupResult } from "@/lib/customer";
+import { BRANDS, DOCUMENTS, STATES, errorMessage, loadVehicles, lookupVehicle, saveVehicle, skipOnboarding, track, type LookupResult } from "@/lib/customer";
+
+import { clearVerifiedPlate, normalizePlate, readVerifiedPlate, type PlateDraft } from "@/lib/email-link";
 
 const screens = ["buyer_onboarding_welcome", "buyer_onboarding_car_brand", "buyer_onboarding_car_details"];
 function playYearCue() {
@@ -25,27 +27,76 @@ function playYearCue() {
 }
 
 export default function CustomerOnboarding({ additional = false }: { additional?: boolean }) {
-  const { profile } = useCustomer(); const router = useRouter();
+  const { user, profile } = useCustomer(); const router = useRouter();
+  const uid = user?.uid;
+  const [checkingPlate, setCheckingPlate] = useState(true);
+  const [plateDraft, setPlateDraft] = useState<PlateDraft>();
+  const [registrationState, setRegistrationState] = useState("");
+  const savingVehicle = useRef(false);
   const [step, setStep] = useState(0); const [make, setMake] = useState(""); const [model, setModel] = useState("");
   const [year, setYear] = useState(""); const [type, setType] = useState("Salon"); const [plate, setPlate] = useState("");
   const [lookup, setLookup] = useState<LookupResult | null>(null);
   const [search, setSearch] = useState(""); const [custom, setCustom] = useState(false); const [busy, setBusy] = useState(false); const [error, setError] = useState("");
+  useEffect(() => {
+    const draft = uid ? readVerifiedPlate(uid) : undefined;
+    if (!draft || !uid) { setCheckingPlate(false); return; }
+    let active = true;
+    setPlateDraft(draft);
+    setPlate(draft.plate);
+    async function resume() {
+      const cars = await loadVehicles(uid!);
+      if (!active) return;
+      const saved = cars.find((car) => normalizePlate(car.registration?.plateNumber || "") === draft!.plate);
+      if (saved) {
+        if (!additional) await skipOnboarding();
+        if (!active) return;
+        clearVerifiedPlate();
+        window.location.replace(draft!.intent === "renew" ? "/renew/orders?car=" + encodeURIComponent(saved.carId) : "/renew");
+        return;
+      }
+      try {
+        const vehicle = await lookupVehicle(draft!.plate);
+        if (!active) return;
+        setLookup(vehicle);
+        setMake(vehicle.make);
+        setModel(vehicle.model);
+        setType(vehicle.appVehicleType);
+        setStep(2);
+      } catch {
+        if (!active) return;
+        setError("We couldn’t confirm the vehicle details. You can enter them below.");
+        setStep(1);
+      }
+      setCheckingPlate(false);
+    }
+    void resume().catch((failure) => {
+      if (active) { setError(errorMessage(failure)); setCheckingPlate(false); }
+    });
+    return () => { active = false; };
+  }, [additional, uid]);
   const autoDetails = step === 2 && Boolean(lookup);
   const totalSteps = step === 0 || lookup ? 2 : 3;
   const visibleStep = lookup && step > 0 ? step : step + 1;
-  useEffect(() => { void track("screen_viewed", { screenName: screens[step], previousScreen: step ? screens[step === 2 && lookup ? 0 : step - 1] : "RegistrationScreen", timeOnPreviousScreenMs: 0 }); }, [step]);
+  useEffect(() => { void track("screen_viewed", { screenName: screens[step], previousScreen: step ? screens[step - 1] : "RegistrationScreen", timeOnPreviousScreenMs: 0 }); }, [step]);
   function next() { setError(""); void track("cta_tapped", { screenName: screens[step], ctaLabel: "Continue" }); setStep((n) => n + 1); }
   async function finish() {
-    if (busy) return;
+    if (busy || savingVehicle.current) return;
+    savingVehicle.current = true;
     setBusy(true); setError("");
     try {
       const documents = [...new Set([...DOCUMENTS.slice(0, 3), ...(lookup?.documents.map((document) => document.type) ?? [])])];
-      await saveVehicle({ make, model, year: Number(year), type, plate, state: "", documents,
-        expiries: Object.fromEntries((lookup?.documents || []).map((d) => [d.type, d.expiryDate])), lookup, onboarding: !additional });
-      router.replace("/renew");
-    } catch (e) { setError(errorMessage(e)); setBusy(false); }
+      const carId = await saveVehicle({ make, model, year: Number(year), type, plate, state: registrationState, documents,
+        expiries: Object.fromEntries((lookup?.documents || []).map((d) => [d.type, d.expiryDate])), lookup, onboarding: !additional, plateOnboarding: Boolean(plateDraft) });
+      if (plateDraft) {
+        clearVerifiedPlate();
+        window.location.replace(plateDraft.intent === "renew" ? "/renew/orders?car=" + encodeURIComponent(carId) : "/renew");
+      } else {
+        router.replace("/renew");
+      }
+    } catch (e) { setError(errorMessage(e)); setBusy(false); savingVehicle.current = false; }
   }
-  return <div className="customer-main" style={{ maxWidth: 740 }}><div className="customer-step"><span>{additional ? "Add another vehicle" : "Build your garage"}</span><button className="customer-link" disabled={busy} onClick={async () => { try { if (!additional) await skipOnboarding(); router.replace("/renew"); } catch (e) { setError(errorMessage(e)); } }}>Skip for now</button><span>Step {visibleStep} of {totalSteps}</span></div>
+  if (checkingPlate) return <p className="customer-loading" role="status">Loading your vehicle…</p>;
+  return <div className="customer-main" style={{ maxWidth: 740 }}><div className="customer-step"><span>{additional ? "Add another vehicle" : "Build your garage"}</span><button className="customer-link" disabled={busy} onClick={async () => { try { if (!additional) await skipOnboarding(); clearVerifiedPlate(); router.replace("/renew"); } catch (e) { setError(errorMessage(e)); } }}>Skip for now</button><span>Step {visibleStep} of {totalSteps}</span></div>
     <div className="customer-progress"><span style={{ width: `${visibleStep / totalSteps * 100}%` }} /></div><div className="customer-card">
       {step === 0 && <><CarFront size={38} className="text-gold mb-5" /><h1>{additional ? "Add your next vehicle" : `Welcome${profile?.firstName ? `, ${profile.firstName}` : ""}.`}</h1><p>Let’s add your vehicle and the documents you want AutoDrive to help you manage.</p>
         <form onSubmit={async (e) => { e.preventDefault(); if (busy) return; setBusy(true); setError(""); setLookup(null);
@@ -66,7 +117,13 @@ export default function CustomerOnboarding({ additional = false }: { additional?
       {step === 2 && <><h1>{autoDetails ? "Complete vehicle details" : "Tell us about your vehicle"}</h1><p>{autoDetails ? "We found your vehicle. Add its model year to complete the details." : "A few details help us keep the right documents together."}</p><form onSubmit={(e) => { e.preventDefault(); if (!make.trim() || !model.trim() || Number(year) < 1950 || Number(year) > new Date().getFullYear() + 1) { setError("Check your make, model and year."); return; } void finish(); }}>
         <label className="customer-field"><span>Make</span><input required value={make} readOnly={!custom && !lookup} onChange={(e) => setMake(e.target.value)} /></label>
         <div className="customer-row"><label className="customer-field"><span>Model</span><input required value={model} onChange={(e) => setModel(e.target.value)} placeholder="Corolla" /></label><label className={autoDetails ? "customer-field customer-model-year" : "customer-field"}><span>{autoDetails ? "Model year · Required" : "Year"}</span><input autoFocus={autoDetails && !year} required inputMode="numeric" type="number" min={1950} max={new Date().getFullYear() + 1} value={year} onChange={(e) => setYear(e.target.value)} placeholder="2018" /></label></div>
-        <label className="customer-field"><span>Car type</span><select value={type} onChange={(e) => setType(e.target.value)}><option value="Salon">Salon</option><option value="Jeep">Jeep / SUV</option></select></label><button disabled={busy} className="customer-primary customer-full" type="submit">{busy ? "Saving your vehicle…" : "Save and open my garage"}</button></form></>}
+        <label className="customer-field"><span>Car type</span><select value={type} onChange={(e) => setType(e.target.value)}><option value="Salon">Salon</option><option value="Jeep">Jeep / SUV</option></select></label>
+        {plateDraft?.intent === "renew" && <label className="customer-field"><span>Registration state</span>
+          <select required value={registrationState} onChange={(event) => setRegistrationState(event.target.value)}>
+            <option value="">Choose state</option>{STATES.map((state) => <option key={state}>{state}</option>)}
+          </select>
+        </label>}
+        <button disabled={busy} className="customer-primary customer-full" type="submit">{busy ? "Saving your vehicle…" : plateDraft?.intent === "renew" ? "Save and choose papers" : "Save and open my garage"}</button></form></>}
       {error && <div className="customer-error" role="alert">{error}</div>}{step > 0 && <button className="customer-link customer-small mt-5" disabled={busy} onClick={() => { setStep((n) => n === 2 && lookup ? 0 : n - 1); setError(""); }}>← Back</button>}
     </div></div>;
 }

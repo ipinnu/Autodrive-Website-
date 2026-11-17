@@ -2,7 +2,8 @@
 
 import { useState, type FormEvent } from "react";
 import { ArrowRight, Bell, Search } from "lucide-react";
-import Link from "next/link";
+import { normalizePlate, requestEmailLink, type PlateIntent } from "@/lib/email-link";
+import { errorMessage, validateDetails } from "@/lib/customer";
 import { track } from "@/lib/customer";
 import VehicleIcon from "./VehicleIcon";
 
@@ -13,7 +14,6 @@ type Status = "expired" | "watch" | "current" | "unknown";
 type PlateResult = {
   vehicle?: { make: string; model: string };
   documents: { type: string; expiryDate: string | null; status: Status }[];
-  reminder: { firstDate: string; lastDate: string; receipt: string } | null;
 };
 
 const statusLabels: Record<Status, string> = {
@@ -36,10 +36,10 @@ function formatDate(date: string) {
   }).format(new Date(date));
 }
 
-async function plateRequest<T>(action: "lookup" | "reminder", data: Record<string, string>): Promise<T> {
+async function plateRequest<T>(data: Record<string, string>): Promise<T> {
   let response: Response;
   try {
-    response = await fetch(`${apiBase.replace(/\/$/, "")}/v1/public/plate/${action}`, {
+    response = await fetch(`${apiBase.replace(/\/$/, "")}/v1/public/plate/lookup`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(data),
@@ -62,9 +62,10 @@ export default function PlateCheckSection() {
   const [reminderError, setReminderError] = useState("");
   const [lookingUp, setLookingUp] = useState(false);
   const [saving, setSaving] = useState(false);
-  const [savedDate, setSavedDate] = useState("");
+  const [intent, setIntent] = useState<PlateIntent>();
+  const [sent, setSent] = useState(false);
+  const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
-  const [date, setDate] = useState("");
 
   async function checkPlate(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -72,13 +73,14 @@ export default function PlateCheckSection() {
     setResult(null);
     setLookupError("");
     setReminderError("");
-    setSavedDate("");
-    setDate("");
+    setIntent(undefined);
+    setSent(false);
+    setFullName("");
     setEmail("");
     setLookingUp(true);
     void track("cta_tapped", { screenName: "web_home_plate_check", ctaLabel: "Check my plate" });
     try {
-      setResult(await plateRequest<PlateResult>("lookup", { plateNumber: plate }));
+      setResult(await plateRequest<PlateResult>({ plateNumber: plate }));
     } catch (error) {
       setLookupError(error instanceof Error ? error.message : "Please try again.");
     } finally {
@@ -86,28 +88,32 @@ export default function PlateCheckSection() {
     }
   }
 
-  async function saveReminder(event: FormEvent<HTMLFormElement>) {
+  function chooseIntent(next: PlateIntent) {
+    setIntent(next);
+    setSent(false);
+    setReminderError("");
+    void track("cta_tapped", { screenName: "web_home_plate_check", ctaLabel: next === "renew" ? "Renew these papers" : "Remind me when it’s due" });
+  }
+
+  async function startSignup(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (!result?.reminder || saving) return;
+    if (!result || !intent || saving) return;
     setSaving(true);
     setReminderError("");
     try {
-      await plateRequest("reminder", { email, date, receipt: result.reminder.receipt });
-      setSavedDate(date);
-      setEmail("");
-      void track("cta_tapped", { screenName: "web_home_plate_check", ctaLabel: "Set email reminder" });
+      validateDetails(fullName, undefined);
+      await requestEmailLink(email, { plate: normalizePlate(plate), fullName: fullName.trim(), intent });
+      setSent(true);
     } catch (error) {
-      setReminderError(error instanceof Error ? error.message : "Please try again.");
-    } finally {
-      setSaving(false);
-    }
+      setReminderError(errorMessage(error));
+    } finally { setSaving(false); }
   }
 
   const expired = result?.documents.some(({ status }) => status === "expired");
   const watch = result?.documents.some(({ status }) => status === "watch");
   const hasKnownDates = result?.documents.some(({ status }) => status !== "unknown");
   const incomplete = result?.documents.some(({ status }) => status === "unknown");
-  const reminderHeading = "mb-1 flex items-center gap-2 font-semibold text-navy";
+  const remindFirst = !expired && result?.documents.some(({ status, expiryDate }) => Boolean(expiryDate) && (status === "watch" || status === "current"));
   const reminderPanel = "mt-6 rounded-2xl border border-[#e6d9be] bg-[#fcf9f2] p-4 sm:p-6";
   const fieldStyle = "min-h-12 w-full rounded-xl border border-[#b7c8e2] bg-white px-4 text-navy outline-none focus:border-[#a1824a] focus:ring-2 focus:ring-[#a1824a]/30";
   const buttonStyle = "inline-flex min-h-12 items-center justify-center gap-2 rounded-xl bg-navy px-5 font-semibold text-white hover:bg-[#204583] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#a1824a] disabled:opacity-60";
@@ -158,6 +164,7 @@ export default function PlateCheckSection() {
                 </h3>
               </header>
             )}
+            <p className="mb-3 text-sm font-semibold text-navy">Plate: {normalizePlate(plate)}</p>
             <div role="status" className={`rounded-xl border p-4 ${expired ? "border-red-200 bg-red-50 text-red-900" :
               watch ? "border-[#e6d9be] bg-[#fcf9f2] text-[#624a20]" :
                 !hasKnownDates || incomplete ? "border-blue-200 bg-blue-50 text-navy" : "border-emerald-200 bg-emerald-50 text-emerald-950"}`}>
@@ -179,41 +186,32 @@ export default function PlateCheckSection() {
                 </dd>
               </div>)}
             </dl>
-            {expired && <Link href="/renew/from-plate?intent=renew" className={`mt-4 ${buttonStyle}`}>
-              Renew today <ArrowRight size={18} className="text-[#e9cd94]" aria-hidden="true" />
-            </Link>}
-            {savedDate ? <p role="status" className="mt-6 rounded-xl border border-emerald-200 border-l-2 border-l-[#a1824a] bg-emerald-50 p-4 font-medium text-emerald-900">
-              Reminder saved for {formatDate(savedDate)}.
-            </p> : result.reminder && <form onSubmit={saveReminder} className={reminderPanel}>
-              <h3 className={reminderHeading}>
-                <Bell size={17} className="shrink-0 text-[#8a6b32]" aria-hidden="true" />
-                Register your email for easier renewals
-              </h3>
-              <p className="mb-4 mt-1 text-sm text-navy/75">Choose a date for a one-time reminder with a link to renew online.</p>
-              <div className="grid gap-3 sm:grid-cols-2">
-                <label className="min-w-0 text-sm font-semibold text-navy">
-                  Email address
-                  <input type="email" autoComplete="email" required maxLength={254} value={email}
-                    onChange={(event) => setEmail(event.target.value)} className={`mt-2 ${fieldStyle}`} />
-                </label>
-                <label className="min-w-0 text-sm font-semibold text-navy">
-                  Reminder date
-                  <input type="date" required min={result.reminder.firstDate} max={result.reminder.lastDate}
-                    value={date} onChange={(event) => setDate(event.target.value)} className={`mt-2 ${fieldStyle}`} />
-                </label>
-              </div>
-              {reminderError && <p role="alert" className="mt-3 rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-900">{reminderError}</p>}
-              <button type="submit" className={`mt-4 ${buttonStyle}`} disabled={saving}>
-                {saving ? "Saving…" : "Set email reminder"}
+            <div className="mt-5 flex flex-wrap gap-3">
+              {remindFirst && <button type="button" className={buttonStyle} disabled={saving} onClick={() => chooseIntent("remind")}>
+                <Bell size={17} aria-hidden="true" /> Remind me when it’s due
+              </button>}
+              <button type="button" className={remindFirst ? "min-h-12 rounded-xl border border-navy px-5 font-semibold text-navy" : buttonStyle}
+                disabled={saving} onClick={() => chooseIntent("renew")}>
+                Renew these papers <ArrowRight size={17} className="ml-1 inline" aria-hidden="true" />
               </button>
-            </form>}
-            {!expired && !result.reminder && <div className={reminderPanel}>
-              <h3 className={reminderHeading}>
-                <Bell size={17} className="shrink-0 text-[#8a6b32]" aria-hidden="true" />
-                Register your email for easier renewals
-              </h3>
-              <p className="mt-1 text-sm text-navy/75">Create an AutoDrive account to track your papers and renew online when they are due.</p>
-              <Link href="/renew/from-plate" className={'mt-4 ' + buttonStyle}>Register with email</Link>
+            </div>
+            {intent && <div className={reminderPanel}>
+              <h3 className="mb-2 font-semibold text-navy">{sent ? "Check your inbox" : intent === "renew" ? "Continue with this vehicle" : "Save this vehicle in AutoDrive"}</h3>
+              {sent && <p role="status" className="mb-4 text-sm text-navy">Open the sign-in link we sent to your email to continue with this vehicle.</p>}
+              <form onSubmit={startSignup}>
+                {!sent && <div className="grid gap-3 sm:grid-cols-2">
+                  <label className="text-sm font-semibold text-navy">Full name
+                    <input required autoComplete="name" maxLength={120} className={"mt-2 " + fieldStyle} value={fullName} onChange={(event) => setFullName(event.target.value)} />
+                  </label>
+                  <label className="text-sm font-semibold text-navy">Email address
+                    <input required type="email" autoComplete="email" maxLength={254} className={"mt-2 " + fieldStyle} value={email} onChange={(event) => setEmail(event.target.value)} />
+                  </label>
+                </div>}
+                {reminderError && <p role="alert" className="mt-3 text-sm text-red-800">{reminderError}</p>}
+                <button type="submit" className={"mt-4 " + buttonStyle} disabled={saving}>
+                  {saving ? "Sending…" : sent ? "Send another link" : "Send me a sign-in link"}
+                </button>
+              </form>
             </div>}
           </div>}
         </div>

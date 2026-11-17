@@ -7,6 +7,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { Building2, CheckCircle2, MailCheck, UserRound } from "lucide-react";
 import { useCustomer } from "./CustomerProvider";
+import { requestEmailLink } from "@/lib/email-link";
 import { client, errorMessage, registrationAgent, registrationData, track, validateDetails } from "@/lib/customer";
 
 export function AccountTypeChoice() {
@@ -133,6 +134,13 @@ export function CustomerSignIn() {
       }}>Forgot password?</button>
       {error && <div className="customer-error" role="alert">{error}</div>}{notice && <div className="customer-notice" role="status">{notice}</div>}
       <button disabled={busy} className="customer-primary customer-full" type="submit">{busy ? "Please wait…" : "Sign in"}</button>
+      <button type="button" className="customer-link mt-4" disabled={busy} onClick={async () => {
+        setBusy(true); setError(""); setNotice("");
+        try {
+          await requestEmailLink(email);
+          setNotice("Check your inbox for your AutoDrive sign-in link.");
+        } catch (e) { setError(errorMessage(e)); } finally { setBusy(false); }
+      }}>Email me a sign-in link</button>
     </form><div className="customer-divider">or</div><SocialSignIn onError={setError} screenName="web_signin" />
     <p className="customer-small text-center mt-5">New to AutoDrive? <Link className="customer-link" href="/renew/sign-up">Create account</Link></p>
   </div>;

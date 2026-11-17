@@ -1,53 +1,98 @@
 const assert = require('node:assert/strict');
 const { readFileSync } = require('node:fs');
-const { createRequire } = require('node:module');
-const { resolve } = require('node:path');
 const { runInNewContext } = require('node:vm');
 const { test } = require('node:test');
-const ts = createRequire(resolve('package.json'))('typescript');
+const ts = require('typescript');
 const { outputText } = ts.transpileModule(readFileSync('src/app/renew/from-plate/page.tsx', 'utf8'), {
   compilerOptions: { jsx: ts.JsxEmit.ReactJSX, module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2020 },
 });
 
-function mount({ savedUser, rejectSignOut, search = '' }) {
+function mount({ valid = true, accepts = true, draft = true, existing } = {}) {
   const events = [];
-  let finishAuthRestore;
-  const auth = {
-    currentUser: null,
-    authStateReady: () => new Promise((resolveRestore) => {
-      finishAuthRestore = () => { auth.currentUser = savedUser ? { uid: 'synthetic-user' } : null; resolveRestore(); };
-    }),
-  };
+  const states = [], refs = [];
+  let stateIndex = 0, refIndex = 0, form, initialized = false;
+  const saved = { email: 'customer@example.test', plateDraft: { plate: 'ABC123DE', fullName: 'Test Customer', intent: 'renew' } };
+  const auth = { currentUser: { uid: 'previous-user' }, authStateReady: async () => {} };
+  const user = { uid: 'verified-user', email: saved.email, emailVerified: true };
   const exports = {};
+  const element = (tag, props) => { if (tag === 'form') form = props; };
   runInNewContext(outputText, {
-    exports,
-    URLSearchParams,
-    window: { location: { search, replace: (path) => events.push(path) } },
+    exports, URLSearchParams,
+    window: { history: { replaceState() {} }, location: { href: 'https://example.test/renew/from-plate', search: '?draft=abc', replace: (url) => events.push(url) } },
     require: (name) => ({
-      react: { useEffect: (effect) => effect(), useState: () => [false, () => events.push('error')] },
-      'react/jsx-runtime': { jsxs: () => {}, jsx: () => {} },
-      'firebase/auth': { signOut: async () => {
-        events.push('sign out');
-        if (rejectSignOut) throw new Error('Sign-out unavailable');
-        auth.currentUser = null;
-      } },
+      react: {
+        useEffect: (effect) => { if (!initialized) { initialized = true; effect(); } },
+        useState: (initial) => {
+          const i = stateIndex++;
+          if (!(i in states)) states[i] = initial;
+          return [states[i], (v) => { states[i] = v; }];
+        },
+        useRef: (initial) => refs[refIndex++] ?? (refs[refIndex - 1] = { current: initial }),
+      },
+      'react/jsx-runtime': { jsx: element, jsxs: element },
+      'firebase/auth': {
+        isSignInWithEmailLink: () => valid,
+        signOut: async () => { events.push('sign out'); auth.currentUser = null; },
+        setPersistence: async () => {},
+        signInWithEmailLink: async (_auth, email) => {
+          events.push('verify link');
+          if (!accepts || email !== saved.email) throw Object.assign(new Error('Used link'), { code: 'auth/invalid-action-code' });
+          auth.currentUser = user;
+          return { user };
+        },
+      },
+      'firebase/firestore': {
+        doc: (_db, collection, uid) => collection + '/' + uid,
+        runTransaction: (_db, callback) => callback({
+          get: async () => ({ exists: () => Boolean(existing), data: () => existing }),
+          set: (ref) => events.push(ref),
+        }),
+      },
       'next/link': {},
-      '@/lib/firebase': { getFirebaseClient: () => ({ auth }) },
+      '@/lib/customer': {
+        client: () => ({ auth, db: {} }), errorMessage: (e) => e.message,
+        registrationAgent: async () => 'agent', registrationData: () => ({ role: 'buyer' }), track: async () => {},
+      },
+      '@/lib/email-link': {
+        readEmailDraft: () => draft ? saved : undefined, clearEmailDraft() {}, clearVerifiedPlate() {},
+        rememberVerifiedPlate: (uid) => { events.push('remember ' + uid); return true; },
+        requestEmailLink: async () => { events.push('send link'); },
+      },
     })[name],
   });
-  exports.default();
-  return { events, finishAuthRestore };
+  function render() { stateIndex = 0; refIndex = 0; exports.default(); }
+  render();
+  return { events, async submit(email) {
+    if (email) states[0] = email;
+    render();
+    form.onSubmit({ preventDefault() {} });
+    await new Promise(setImmediate);
+  } };
 }
 
-for (const regression of [
-  { name: 'stored login waits for restoration and signs out first', savedUser: true, expected: ['sign out', '/renew/sign-up'] },
-  { name: 'fresh guest gets signup', savedUser: false, expected: ['/renew/sign-up'] },
-  { name: 'renewal entry clears the session and keeps the welcome destination', savedUser: true, search: '?intent=renew', expected: ['sign out', '/renew/welcome'] },
-  { name: 'failed sign-out blocks entry to the account flow', savedUser: true, rejectSignOut: true, expected: ['sign out', 'error'] },
-]) test(regression.name, async () => {
-  const { events, finishAuthRestore } = mount(regression);
+test('a saved session cannot open an account before Firebase verifies the link', async () => {
+  const { events, submit } = mount();
   assert.deepEqual(events, []);
-  finishAuthRestore();
-  await new Promise(setImmediate);
-  assert.deepEqual(events, regression.expected);
+  await submit();
+  assert.deepEqual(events, ['sign out', 'verify link', 'users/verified-user', 'remember verified-user', '/renew/onboarding']);
+});
+test('an expired or used link cannot create a profile or reveal an account', async () => {
+  const { events, submit } = mount({ accepts: false });
+  await submit();
+  assert.deepEqual(events, ['sign out', 'verify link']);
+});
+test('a returning customer keeps their profile and resumes adding the checked car', async () => {
+  const { events, submit } = mount({ existing: { role: 'buyer', buyerOnboardingCompleted: true } });
+  await submit();
+  assert.deepEqual(events, ['sign out', 'verify link', 'remember verified-user', '/renew/add-vehicle']);
+});
+test('another browser requires the email and opens ordinary onboarding without a draft', async () => {
+  const { events, submit } = mount({ draft: false });
+  await submit('customer@example.test');
+  assert.deepEqual(events, ['sign out', 'verify link', '/renew']);
+});
+test('a bare callback URL just offers an email link', async () => {
+  const { events, submit } = mount({ valid: false, draft: false });
+  await submit('customer@example.test');
+  assert.deepEqual(events, ['send link']);
 });

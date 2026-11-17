@@ -9,6 +9,7 @@ import Image from "next/image";
 import { CarFront, FileCheck2, LogOut, Truck } from "lucide-react";
 import { getFirebaseClient } from "@/lib/firebase";
 import { client, errorMessage, track, type AccountType, type BuyerProfile } from "@/lib/customer";
+import { readVerifiedPlate } from "@/lib/email-link";
 import { readCheckout, rememberCheckout } from "@/lib/checkout-recovery";
 
 type CustomerContext = { user: User | null; profile: BuyerProfile | null; accountType: AccountType;
@@ -90,7 +91,7 @@ function CustomerSessionProvider({ children }: { children: React.ReactNode }) {
     : profile.role !== "buyer" ? null
     : !user.emailVerified ? (pathname === "/renew/verify" ? null : "/renew/verify")
     : !profile.buyerOnboardingCompleted ? (pathname === "/renew/onboarding" ? null : "/renew/onboarding")
-    : publicPaths.includes(pathname) || pathname === "/renew/verify" || pathname === "/renew/onboarding" ? "/renew" : null;
+    : publicPaths.includes(pathname) || pathname === "/renew/verify" || (pathname === "/renew/onboarding" && !readVerifiedPlate(user.uid)) ? "/renew" : null;
   useEffect(() => {
     if (pathname === "/renew/whatsapp") {
       const code = window.location.hash.slice(1);

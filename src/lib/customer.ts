@@ -1,4 +1,4 @@
-import { addDoc, collection, doc, getDoc, getDocs, increment, runTransaction, serverTimestamp, setDoc, writeBatch } from "firebase/firestore";
+import { addDoc, collection, doc, getDoc, getDocs, increment, runTransaction, serverTimestamp, setDoc, writeBatch, type DocumentData, type DocumentReference, type SetOptions } from "firebase/firestore";
 import { getFirebaseClient } from "./firebase";
 
 export type AccountType = "personal" | "organization";
@@ -121,38 +121,63 @@ export function scheduleId(path: string, kind: string) {
 }
 
 export async function saveVehicle(input: { make: string; model: string; year: number; type: string; plate: string; state: string;
-  documents: string[]; expiries: Record<string, string>; lookup?: LookupResult | null; onboarding: boolean }) {
+  documents: string[]; expiries: Record<string, string>; lookup?: LookupResult | null; onboarding: boolean; plateOnboarding?: boolean }) {
   const { auth, db } = client();
   const user = auth.currentUser;
   if (!user?.emailVerified) throw new Error("Verify your email before saving your vehicle.");
   if (!input.make.trim() || !input.model.trim() || input.year < 1950 || input.year > new Date().getFullYear() + 1 || !Number.isInteger(input.year)) throw new Error("Check your vehicle make, model and year.");
   if (!["Jeep", "Salon"].includes(input.type)) throw new Error("Select your vehicle type.");
   if (input.documents.length === 0) throw new Error("Choose at least one document to track.");
-  const ref = doc(collection(db, "cars", user.uid, "carDetails"));
-  const batch = writeBatch(db);
   const plate = input.plate.toUpperCase().replace(/[^A-Z0-9]/g, "");
-  const now = new Date();
-  batch.set(ref, { carId: ref.id, userId: user.uid, name: `${input.make.trim()} ${input.model.trim()}`,
-    make: input.make.trim(), model: input.model.trim(), year: input.year, type: input.type,
-    lastUpdated: now, onboardingCreated: input.onboarding, isCustomBrand: !BRANDS.some(([make]) => make === input.make),
-    registration: { plateNumber: plate || null, state: input.state || null,
-      profileCompletedAt: plate && input.state ? now : null },
-    ...(input.lookup ? { vehicleLookupConfirmed: true, vehicleLookupConfirmedAt: now } : {}),
-  });
-  for (const type of input.documents) {
-    if (!DOCUMENTS.includes(type)) throw new Error("Unknown document type.");
-    const documentRef = doc(ref, "documents", type);
-    const expiration = input.expiries[type] || "Not Set";
-    const parsed = expiration === "Not Set" ? null : new Date(`${expiration}T00:00:00Z`);
-    if (parsed && (!Number.isFinite(parsed.getTime()) || parsed.toISOString().slice(0, 10) !== expiration)) throw new Error("Check the expiry date for " + type);
-    batch.set(documentRef, { type, expiration, expirationDate: expiration, isExpiringSoon: false, isExpired: false,
-      createdFromOnboarding: input.onboarding, ...(input.lookup?.documents.some((item) => item.type === type && item.expiryDate === expiration) ? { source: "vehicle_lookup" } : {}) });
-    for (const kind of ["before", "after"]) batch.set(doc(db, "notification_history", scheduleId(documentRef.path, kind)), {
-      scheduleType: "renewal_reminder", documentPath: documentRef.path, kind, scheduleState: "dirty", dueAt: 0,
-    }, { merge: true });
+  if (input.plateOnboarding && !/^[A-Z0-9]{5,12}$/.test(plate)) throw new Error("Check the licence plate.");
+  const cars = collection(db, "cars", user.uid, "carDetails");
+  let ref = doc(cars);
+  if (input.plateOnboarding) {
+    const digest = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(user.uid + "/" + plate));
+    const id = Array.from(new Uint8Array(digest), (byte) => byte.toString(16).padStart(2, "0")).join("");
+    ref = doc(cars, "plate-" + id);
   }
-  if (input.onboarding) batch.update(doc(db, "users", user.uid), { buyerOnboardingCompleted: true, lastUpdated: now });
-  await batch.commit();
+  const now = new Date();
+  const writeVehicle = (batch: {
+    set(ref: DocumentReference, data: DocumentData, options?: SetOptions): unknown;
+    update(ref: DocumentReference, data: DocumentData): unknown;
+  }) => {
+    batch.set(ref, { carId: ref.id, userId: user.uid, name: `${input.make.trim()} ${input.model.trim()}`,
+      make: input.make.trim(), model: input.model.trim(), year: input.year, type: input.type,
+      lastUpdated: now, onboardingCreated: input.onboarding, isCustomBrand: !BRANDS.some(([make]) => make === input.make),
+      registration: { plateNumber: plate || null, state: input.state || null,
+        profileCompletedAt: plate && input.state ? now : null },
+      ...(input.lookup ? { vehicleLookupConfirmed: true, vehicleLookupConfirmedAt: now } : {}),
+    });
+    for (const type of input.documents) {
+      if (!DOCUMENTS.includes(type)) throw new Error("Unknown document type.");
+      const documentRef = doc(ref, "documents", type);
+      const expiration = input.expiries[type] || "Not Set";
+      const parsed = expiration === "Not Set" ? null : new Date(`${expiration}T00:00:00Z`);
+      if (parsed && (!Number.isFinite(parsed.getTime()) || parsed.toISOString().slice(0, 10) !== expiration)) throw new Error("Check the expiry date for " + type);
+      batch.set(documentRef, { type, expiration, expirationDate: expiration, isExpiringSoon: false, isExpired: false,
+        createdFromOnboarding: input.onboarding, ...(input.lookup?.documents.some((item) => item.type === type && item.expiryDate === expiration) ? { source: "vehicle_lookup" } : {}) });
+      for (const kind of ["before", "after"]) batch.set(doc(db, "notification_history", scheduleId(documentRef.path, kind)), {
+        scheduleType: "renewal_reminder", documentPath: documentRef.path, kind, scheduleState: "dirty", dueAt: 0,
+      }, { merge: true });
+    }
+    if (input.onboarding) batch.update(doc(db, "users", user.uid), { buyerOnboardingCompleted: true, lastUpdated: now });
+  };
+  if (input.plateOnboarding) {
+    const created = await runTransaction(db, async (transaction) => {
+      if ((await transaction.get(ref)).exists()) return false;
+      writeVehicle(transaction);
+      return true;
+    });
+    if (!created) {
+      if (input.onboarding) await skipOnboarding();
+      return ref.id;
+    }
+  } else {
+    const batch = writeBatch(db);
+    writeVehicle(batch);
+    await batch.commit();
+  }
   void track("car_added", { carType: input.type, make: input.make, model: input.model, year: input.year, documentsTracked: input.documents.length });
   return ref.id;
 }
