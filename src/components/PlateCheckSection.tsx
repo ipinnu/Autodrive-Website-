@@ -1,10 +1,9 @@
 "use client";
 
-import { useState, type FormEvent } from "react";
-import { ArrowRight, Bell, Search } from "lucide-react";
+import { useEffect, useRef, useState, type FormEvent } from "react";
+import { ArrowRight, Bell, MailCheck, Search } from "lucide-react";
 import { normalizePlate, requestEmailLink, type PlateIntent } from "@/lib/email-link";
-import { errorMessage, validateDetails } from "@/lib/customer";
-import { track } from "@/lib/customer";
+import { errorMessage, track, validateDetails } from "@/lib/customer";
 import VehicleIcon from "./VehicleIcon";
 
 const apiBase = process.env.NEXT_PUBLIC_DELIVERY_API_BASE_URL ||
@@ -66,6 +65,11 @@ export default function PlateCheckSection() {
   const [sent, setSent] = useState(false);
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
+  const confirmationHeading = useRef<HTMLHeadingElement>(null);
+
+  useEffect(() => {
+    if (sent) confirmationHeading.current?.focus();
+  }, [sent]);
 
   async function checkPlate(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -186,7 +190,7 @@ export default function PlateCheckSection() {
                 </dd>
               </div>)}
             </dl>
-            <div className="mt-5 flex flex-wrap gap-3">
+            {!sent && <div className="mt-5 flex flex-wrap gap-3">
               {remindFirst && <button type="button" className={buttonStyle} disabled={saving} onClick={() => chooseIntent("remind")}>
                 <Bell size={17} aria-hidden="true" /> Remind me when it’s due
               </button>}
@@ -194,23 +198,40 @@ export default function PlateCheckSection() {
                 disabled={saving} onClick={() => chooseIntent("renew")}>
                 Renew these papers <ArrowRight size={17} className="ml-1 inline" aria-hidden="true" />
               </button>
-            </div>
-            {intent && <div className={reminderPanel}>
-              <h3 className="mb-2 font-semibold text-navy">{sent ? "Check your inbox" : intent === "renew" ? "Continue with this vehicle" : "Save this vehicle in AutoDrive"}</h3>
-              {sent && <p role="status" className="mb-4 text-sm text-navy">Open the sign-in link we sent to your email to continue with this vehicle.</p>}
+            </div>}
+            {intent && !sent && <div className={reminderPanel}>
+              <h3 className="mb-2 font-semibold text-navy">{intent === "renew" ? "Continue with this vehicle" : "Save this vehicle in AutoDrive"}</h3>
               <form onSubmit={startSignup}>
-                {!sent && <div className="grid gap-3 sm:grid-cols-2">
+                <div className="grid gap-3 sm:grid-cols-2">
                   <label className="text-sm font-semibold text-navy">Full name
                     <input required autoComplete="name" maxLength={120} className={"mt-2 " + fieldStyle} value={fullName} onChange={(event) => setFullName(event.target.value)} />
                   </label>
                   <label className="text-sm font-semibold text-navy">Email address
                     <input required type="email" autoComplete="email" maxLength={254} className={"mt-2 " + fieldStyle} value={email} onChange={(event) => setEmail(event.target.value)} />
                   </label>
-                </div>}
+                </div>
                 {reminderError && <p role="alert" className="mt-3 text-sm text-red-800">{reminderError}</p>}
                 <button type="submit" className={"mt-4 " + buttonStyle} disabled={saving}>
-                  {saving ? "Sending…" : sent ? "Send another link" : "Send me a sign-in link"}
+                  {saving ? "Confirming…" : intent === "renew" ? "Confirm your renewal" : "Confirm your reminder"}
                 </button>
+              </form>
+            </div>}
+            {intent && sent && <div className={reminderPanel}>
+              <div className="flex items-center gap-2 text-navy">
+                <MailCheck size={22} aria-hidden="true" />
+                <h3 ref={confirmationHeading} tabIndex={-1} className="text-xl font-bold">Check your email</h3>
+              </div>
+              <p className="mt-2 text-sm text-navy/90">
+                Almost done. Open the sign-in link we sent to <strong className="break-all">{email.trim()}</strong> to
+                {intent === "renew" ? " continue your renewal." : " finish setting up your reminder."}
+              </p>
+              {reminderError && <p role="alert" className="mt-3 text-sm text-red-800">{reminderError}</p>}
+              <form onSubmit={startSignup} className="mt-4 flex flex-wrap gap-x-5 gap-y-2 text-sm font-semibold text-navy">
+                <button type="submit" className="underline underline-offset-4" disabled={saving}>{saving ? "Sending…" : "Send another link"}</button>
+                <button type="button" className="underline underline-offset-4" disabled={saving} onClick={() => {
+                  setSent(false);
+                  setReminderError("");
+                }}>Change email address</button>
               </form>
             </div>}
           </div>}
