@@ -179,7 +179,7 @@ export default function PlateCheckSection() {
                 </dd>
               </div>)}
             </dl>
-            {expired && <Link href="/renew/welcome" className={`mt-4 ${buttonStyle}`}>
+            {expired && <Link href="/renew/from-plate?intent=renew" className={`mt-4 ${buttonStyle}`}>
               Renew today <ArrowRight size={18} className="text-[#e9cd94]" aria-hidden="true" />
             </Link>}
             {savedDate ? <p role="status" className="mt-6 rounded-xl border border-emerald-200 border-l-2 border-l-[#a1824a] bg-emerald-50 p-4 font-medium text-emerald-900">
@@ -213,7 +213,7 @@ export default function PlateCheckSection() {
                 Register your email for easier renewals
               </h3>
               <p className="mt-1 text-sm text-navy/75">Create an AutoDrive account to track your papers and renew online when they are due.</p>
-              <Link href="/renew/sign-up" className={'mt-4 ' + buttonStyle}>Register with email</Link>
+              <Link href="/renew/from-plate" className={'mt-4 ' + buttonStyle}>Register with email</Link>
             </div>}
           </div>}
         </div>

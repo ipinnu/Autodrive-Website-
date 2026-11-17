@@ -47,6 +47,13 @@ function DeliveryBanner({ uid, pathname }: { uid: string; pathname: string }) {
 }
 
 export default function CustomerProvider({ children }: { children: React.ReactNode }) {
+  const pathname = usePathname();
+  // The public plate entry clears any saved session before loading account data.
+  if (pathname === "/renew/from-plate") return <>{children}</>;
+  return <CustomerSessionProvider>{children}</CustomerSessionProvider>;
+}
+
+function CustomerSessionProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [profile, setProfile] = useState<BuyerProfile | null>(null);
   const [loading, setLoading] = useState(true);
