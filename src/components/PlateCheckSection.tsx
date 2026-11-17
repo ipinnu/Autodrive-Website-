@@ -19,7 +19,7 @@ const statusLabels: Record<Status, string> = {
   expired: "Expired",
   watch: "Expiring soon",
   current: "Current",
-  unknown: "Date unavailable",
+  unknown: "Expiry date not confirmed",
 };
 
 const statusStyles: Record<Status, string> = {
@@ -35,6 +35,8 @@ function formatDate(date: string) {
   }).format(new Date(date));
 }
 
+const lookupRetryMessage = "We couldn’t check this plate right now. Please try again in a few minutes.";
+
 async function plateRequest<T>(data: Record<string, string>): Promise<T> {
   let response: Response;
   try {
@@ -45,13 +47,22 @@ async function plateRequest<T>(data: Record<string, string>): Promise<T> {
       signal: AbortSignal.timeout(30_000),
     });
   } catch {
-    throw new Error("The plate checker is temporarily unavailable. Please try again.");
+    throw new Error(lookupRetryMessage);
   }
   if (!response.ok) {
     const failure = await response.json().catch(() => null);
-    throw new Error(failure?.message || "We couldn’t complete that request. Please try again.");
+    if (response.status === 404 && failure?.error === "vehicle_not_found") {
+      throw new Error("We couldn’t find a vehicle with that plate number. Check the number and try again.");
+    }
+    if (failure?.error === "invalid_plate") {
+      throw new Error("Enter a valid licence plate number and try again.");
+    }
+    if (response.status === 429) {
+      throw new Error("Please wait a minute before checking another plate.");
+    }
+    throw new Error(lookupRetryMessage);
   }
-  return response.json();
+  return response.json().catch(() => { throw new Error(lookupRetryMessage); });
 }
 
 export default function PlateCheckSection() {
@@ -174,10 +185,10 @@ export default function PlateCheckSection() {
                 !hasKnownDates || incomplete ? "border-blue-200 bg-blue-50 text-navy" : "border-emerald-200 bg-emerald-50 text-emerald-950"}`}>
               <p className="font-semibold">{expired ? "One or more documents have expired" :
                 watch ? "A document expires within three months" :
-                  !hasKnownDates ? "Expiry dates are unavailable" : incomplete ? "Some expiry dates are unavailable" : "Your checked documents are up to date"}</p>
+                  !hasKnownDates ? "We couldn’t confirm your expiry dates" : incomplete ? "We couldn’t confirm some expiry dates" : "Your checked documents are up to date"}</p>
               {expired && <p className="mt-1 text-sm">Renew today to avoid fines of up to ₦25,000.</p>}
               {watch && !expired && <p className="mt-1 text-sm">Keep a close eye on it and renew before it expires.</p>}
-              {!hasKnownDates && <p className="mt-1 text-sm">Check the dates on your vehicle papers.</p>}
+              {incomplete && <p className="mt-1 text-sm">You can check again in a few minutes for any dates we couldn’t confirm.</p>}
             </div>
             <dl className="mt-4 divide-y divide-[#eee7d8]">
               {result.documents.map((document) => <div key={document.type} className="flex flex-wrap justify-between gap-x-4 gap-y-1 py-3 text-sm">
